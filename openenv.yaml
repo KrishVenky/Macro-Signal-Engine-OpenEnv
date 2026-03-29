@@ -1,0 +1,79 @@
+name: macro-signal-env
+version: "1.0.0"
+description: >
+  Macro Signal Engine: LLM agent plays macro quant analyst,
+  managing a 4-asset portfolio (SPY, GLD, USO, TLT) in response to typed
+  financial signal events. Three task tiers: single_event (easy),
+  regime_shift (medium), causal_chain (hard). Requires multi-step causal
+  reasoning to score well on the hard task.
+author: KrishVenky
+license: MIT
+sdk: docker
+tags:
+  - openenv
+  - finance
+  - macro
+  - portfolio
+  - rl
+  - llm-agent
+python_package: src/envs/macro_signal
+entry_point: macro_signal.server.app:app
+hardware: cpu-basic
+space_url: "https://krishvenky-macro-signal-env.hf.space"
+env:
+  PORT: "7860"
+  HOST: "0.0.0.0"
+  WORKERS: "2"
+  MAX_CONCURRENT_ENVS: "50"
+tasks:
+  - id: single_event
+    difficulty: easy
+    max_steps: 3
+    description: >
+      React to a single unambiguous macroeconomic signal (e.g., oil supply shock)
+      by taking the correct directional position within 3 steps.
+    grader: directional_accuracy * speed_bonus
+    reward_range: [0.0, 1.0]
+  - id: regime_shift
+    difficulty: medium
+    max_steps: 6
+    description: >
+      Manage a portfolio through a 6-step market regime (bull equity, rate-rising,
+      or commodity supercycle). Track the benchmark by maintaining aligned exposures.
+    grader: agent_pnl / benchmark_pnl with step-level alignment signals
+    reward_range: [0.0, 1.0]
+  - id: causal_chain
+    difficulty: hard
+    max_steps: 10
+    description: >
+      Navigate a 10-step causal sequence (geopolitical → supply shock → inflation).
+      Optimal reward requires anticipating consequences before they materialize —
+      the timing_bonus rewards positions entered before the causal event arrives.
+      Most LLMs fail this task without explicit chain-of-thought reasoning.
+    grader: 0.4*directional_accuracy + 0.4*timing_bonus + 0.2*cost_efficiency
+    reward_range: [0.0, 1.0]
+observation_space:
+  type: object
+  fields:
+    step: integer
+    max_steps: integer
+    task_type: string
+    scenario_id: string
+    signal_events: list[SignalEvent]
+    portfolio: list[PortfolioPosition]
+    cash_weight: float
+    portfolio_nav: float
+    benchmark_return: float
+    step_reward: float
+    cumulative_reward: float
+    done: boolean
+    reward: float
+    info: object
+action_space:
+  type: object
+  fields:
+    trade_instructions: list[TradeInstruction]
+    reasoning: string
+  constraints:
+    - "sum(abs(target_weight)) <= 1.0 (no leverage)"
+    - "target_weight in [-1.0, 1.0] (negative = short)"

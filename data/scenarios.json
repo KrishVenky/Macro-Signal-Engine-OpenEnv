@@ -1,0 +1,474 @@
+{
+  "scenarios": [
+    {
+      "scenario_id": "single_event_001",
+      "task_type": "single_event",
+      "max_steps": 3,
+      "description": "Oil supply disruption — correct position: long USO",
+      "signal_schedule": [
+        {
+          "step": 1,
+          "events": [
+            {
+              "event_type": "commodity_shock",
+              "asset": "USO",
+              "magnitude": 0.85,
+              "step": 1
+            }
+          ]
+        },
+        {"step": 2, "events": []},
+        {"step": 3, "events": []}
+      ],
+      "price_path": {
+        "USO": [100.0, 108.5, 110.2, 109.8],
+        "SPY": [450.0, 449.0, 449.5, 450.1],
+        "GLD": [180.0, 180.5, 180.2, 180.0],
+        "TLT": [95.0, 94.5, 94.8, 95.0]
+      },
+      "benchmark_weights": {"SPY": 0.6, "TLT": 0.4},
+      "max_transaction_cost": 0.02,
+      "correct_direction": {"USO": 1},
+      "causal_chain": null
+    },
+    {
+      "scenario_id": "single_event_002",
+      "task_type": "single_event",
+      "max_steps": 3,
+      "description": "Federal Reserve rate hike — correct position: long TLT short SPY",
+      "signal_schedule": [
+        {
+          "step": 1,
+          "events": [
+            {
+              "event_type": "rates_move",
+              "asset": "TLT",
+              "magnitude": -0.80,
+              "step": 1
+            }
+          ]
+        },
+        {"step": 2, "events": []},
+        {"step": 3, "events": []}
+      ],
+      "price_path": {
+        "TLT": [95.0, 91.2, 90.5, 90.8],
+        "SPY": [450.0, 445.0, 444.0, 443.5],
+        "GLD": [180.0, 179.5, 179.8, 180.0],
+        "USO": [100.0, 99.5, 99.8, 100.0]
+      },
+      "benchmark_weights": {"SPY": 0.6, "TLT": 0.4},
+      "max_transaction_cost": 0.02,
+      "correct_direction": {"TLT": -1, "SPY": -1},
+      "causal_chain": null
+    },
+    {
+      "scenario_id": "single_event_003",
+      "task_type": "single_event",
+      "max_steps": 3,
+      "description": "Geopolitical tension in Middle East — correct position: long GLD long USO",
+      "signal_schedule": [
+        {
+          "step": 1,
+          "events": [
+            {
+              "event_type": "geopolitical",
+              "asset": "GLD",
+              "magnitude": 0.75,
+              "step": 1
+            },
+            {
+              "event_type": "geopolitical",
+              "asset": "USO",
+              "magnitude": 0.70,
+              "step": 1
+            }
+          ]
+        },
+        {"step": 2, "events": []},
+        {"step": 3, "events": []}
+      ],
+      "price_path": {
+        "GLD": [180.0, 186.0, 188.5, 187.0],
+        "USO": [100.0, 106.0, 107.5, 107.0],
+        "SPY": [450.0, 448.0, 447.5, 448.0],
+        "TLT": [95.0, 96.5, 96.8, 96.5]
+      },
+      "benchmark_weights": {"SPY": 0.6, "TLT": 0.4},
+      "max_transaction_cost": 0.02,
+      "correct_direction": {"GLD": 1, "USO": 1},
+      "causal_chain": null
+    },
+    {
+      "scenario_id": "single_event_004",
+      "task_type": "single_event",
+      "max_steps": 3,
+      "description": "Strong earnings beat — correct position: long SPY",
+      "signal_schedule": [
+        {
+          "step": 1,
+          "events": [
+            {
+              "event_type": "equity_shock",
+              "asset": "SPY",
+              "magnitude": 0.90,
+              "step": 1
+            }
+          ]
+        },
+        {"step": 2, "events": []},
+        {"step": 3, "events": []}
+      ],
+      "price_path": {
+        "SPY": [450.0, 459.0, 461.5, 462.0],
+        "GLD": [180.0, 179.5, 179.8, 180.0],
+        "USO": [100.0, 100.5, 100.2, 100.0],
+        "TLT": [95.0, 94.5, 94.8, 95.0]
+      },
+      "benchmark_weights": {"SPY": 0.6, "TLT": 0.4},
+      "max_transaction_cost": 0.02,
+      "correct_direction": {"SPY": 1},
+      "causal_chain": null
+    },
+    {
+      "scenario_id": "single_event_005",
+      "task_type": "single_event",
+      "max_steps": 3,
+      "description": "Surprise inflation print beats expectations — correct position: short TLT long GLD",
+      "signal_schedule": [
+        {
+          "step": 1,
+          "events": [
+            {
+              "event_type": "inflation_print",
+              "asset": "TLT",
+              "magnitude": -0.75,
+              "step": 1
+            }
+          ]
+        },
+        {"step": 2, "events": []},
+        {"step": 3, "events": []}
+      ],
+      "price_path": {
+        "TLT": [95.0, 90.8, 90.5, 90.2],
+        "GLD": [180.0, 184.5, 185.0, 184.8],
+        "SPY": [450.0, 447.0, 446.5, 446.0],
+        "USO": [100.0, 102.0, 102.5, 102.0]
+      },
+      "benchmark_weights": {"SPY": 0.6, "TLT": 0.4},
+      "max_transaction_cost": 0.02,
+      "correct_direction": {"TLT": -1, "GLD": 1},
+      "causal_chain": null
+    },
+    {
+      "scenario_id": "regime_shift_001",
+      "task_type": "regime_shift",
+      "max_steps": 6,
+      "description": "Bull equity regime — rising earnings, falling rates. Track 60/40 benchmark.",
+      "signal_schedule": [
+        {
+          "step": 1,
+          "events": [
+            {"event_type": "equity_shock", "asset": "SPY", "magnitude": 0.60, "step": 1}
+          ]
+        },
+        {
+          "step": 2,
+          "events": [
+            {"event_type": "rates_move", "asset": "TLT", "magnitude": 0.40, "step": 2}
+          ]
+        },
+        {"step": 3, "events": []},
+        {
+          "step": 4,
+          "events": [
+            {"event_type": "equity_shock", "asset": "SPY", "magnitude": 0.50, "step": 4}
+          ]
+        },
+        {"step": 5, "events": []},
+        {"step": 6, "events": []}
+      ],
+      "price_path": {
+        "SPY": [450.0, 456.0, 459.0, 461.0, 465.0, 468.0, 470.0],
+        "TLT": [95.0, 96.0, 97.0, 97.5, 97.8, 98.0, 98.2],
+        "GLD": [180.0, 180.5, 180.2, 180.0, 179.8, 180.0, 180.2],
+        "USO": [100.0, 100.5, 100.2, 100.0, 100.3, 100.5, 100.2]
+      },
+      "benchmark_weights": {"SPY": 0.6, "TLT": 0.4},
+      "max_transaction_cost": 0.04,
+      "correct_direction": {"SPY": 1, "TLT": 1},
+      "causal_chain": null
+    },
+    {
+      "scenario_id": "regime_shift_002",
+      "task_type": "regime_shift",
+      "max_steps": 6,
+      "description": "Rate-rising regime — Fed hiking cycle. Agent must reduce duration risk.",
+      "signal_schedule": [
+        {
+          "step": 1,
+          "events": [
+            {"event_type": "rates_move", "asset": "TLT", "magnitude": -0.70, "step": 1}
+          ]
+        },
+        {
+          "step": 2,
+          "events": [
+            {"event_type": "rates_move", "asset": "TLT", "magnitude": -0.65, "step": 2}
+          ]
+        },
+        {"step": 3, "events": []},
+        {
+          "step": 4,
+          "events": [
+            {"event_type": "inflation_print", "asset": "TLT", "magnitude": -0.55, "step": 4}
+          ]
+        },
+        {"step": 5, "events": []},
+        {"step": 6, "events": []}
+      ],
+      "price_path": {
+        "TLT": [95.0, 91.5, 88.5, 87.0, 85.0, 83.5, 82.0],
+        "SPY": [450.0, 447.0, 445.0, 443.0, 442.0, 441.0, 440.5],
+        "GLD": [180.0, 182.0, 183.5, 184.0, 183.5, 184.0, 184.5],
+        "USO": [100.0, 101.5, 102.0, 102.5, 102.0, 102.5, 103.0]
+      },
+      "benchmark_weights": {"SPY": 0.6, "TLT": 0.4},
+      "max_transaction_cost": 0.04,
+      "correct_direction": {"TLT": -1, "GLD": 1},
+      "causal_chain": null
+    },
+    {
+      "scenario_id": "regime_shift_003",
+      "task_type": "regime_shift",
+      "max_steps": 6,
+      "description": "Commodity supercycle — supply constraints driving energy and metals higher.",
+      "signal_schedule": [
+        {
+          "step": 1,
+          "events": [
+            {"event_type": "commodity_shock", "asset": "USO", "magnitude": 0.75, "step": 1}
+          ]
+        },
+        {
+          "step": 2,
+          "events": [
+            {"event_type": "commodity_shock", "asset": "GLD", "magnitude": 0.60, "step": 2}
+          ]
+        },
+        {"step": 3, "events": []},
+        {
+          "step": 4,
+          "events": [
+            {"event_type": "commodity_shock", "asset": "USO", "magnitude": 0.70, "step": 4}
+          ]
+        },
+        {"step": 5, "events": []},
+        {"step": 6, "events": []}
+      ],
+      "price_path": {
+        "USO": [100.0, 107.5, 112.0, 115.0, 120.0, 122.5, 125.0],
+        "GLD": [180.0, 184.0, 188.0, 191.0, 193.0, 195.0, 197.5],
+        "SPY": [450.0, 449.0, 448.5, 448.0, 447.5, 447.0, 446.5],
+        "TLT": [95.0, 94.5, 94.0, 93.8, 93.5, 93.8, 94.0]
+      },
+      "benchmark_weights": {"SPY": 0.6, "TLT": 0.4},
+      "max_transaction_cost": 0.04,
+      "correct_direction": {"USO": 1, "GLD": 1},
+      "causal_chain": null
+    },
+    {
+      "scenario_id": "causal_chain_001",
+      "task_type": "causal_chain",
+      "max_steps": 10,
+      "description": "Middle East conflict escalation: geopolitical tension → oil supply disruption → global inflation spike. Agent must anticipate supply shock before it arrives.",
+      "signal_schedule": [
+        {
+          "step": 1,
+          "events": [
+            {
+              "event_type": "geopolitical",
+              "asset": "USO",
+              "magnitude": 0.65,
+              "step": 1
+            },
+            {
+              "event_type": "geopolitical",
+              "asset": "GLD",
+              "magnitude": 0.55,
+              "step": 1
+            }
+          ]
+        },
+        {"step": 2, "events": []},
+        {"step": 3, "events": []},
+        {
+          "step": 4,
+          "events": [
+            {
+              "event_type": "commodity_shock",
+              "asset": "USO",
+              "magnitude": 0.90,
+              "step": 4
+            }
+          ]
+        },
+        {"step": 5, "events": []},
+        {"step": 6, "events": []},
+        {
+          "step": 7,
+          "events": [
+            {
+              "event_type": "inflation_print",
+              "asset": "TLT",
+              "magnitude": -0.80,
+              "step": 7
+            },
+            {
+              "event_type": "inflation_print",
+              "asset": "GLD",
+              "magnitude": 0.70,
+              "step": 7
+            }
+          ]
+        },
+        {"step": 8, "events": []},
+        {"step": 9, "events": []},
+        {"step": 10, "events": []}
+      ],
+      "price_path": {
+        "USO": [100.0, 103.5, 105.0, 106.0, 115.0, 118.5, 120.0, 121.0, 122.5, 123.0, 124.0],
+        "GLD": [180.0, 183.0, 184.5, 185.0, 187.0, 190.0, 192.5, 196.0, 198.5, 200.0, 201.5],
+        "TLT": [95.0, 94.5, 94.0, 93.5, 93.0, 92.0, 91.0, 88.5, 87.0, 86.5, 86.0],
+        "SPY": [450.0, 449.0, 448.5, 448.0, 446.0, 444.0, 442.5, 440.0, 438.5, 438.0, 437.5]
+      },
+      "benchmark_weights": {"SPY": 0.6, "TLT": 0.4},
+      "max_transaction_cost": 0.06,
+      "correct_direction": {"USO": 1, "GLD": 1, "TLT": -1, "SPY": -1},
+      "causal_chain": [
+        {
+          "step": 1,
+          "linked_step": 4,
+          "asset": "USO",
+          "expected_direction": 1,
+          "description": "Geopolitical tension in Step 1 implies supply shock to USO in Step 4"
+        },
+        {
+          "step": 4,
+          "linked_step": 7,
+          "asset": "TLT",
+          "expected_direction": -1,
+          "description": "Supply shock in Step 4 drives inflation print in Step 7, negative for bonds"
+        },
+        {
+          "step": 1,
+          "linked_step": 7,
+          "asset": "GLD",
+          "expected_direction": 1,
+          "description": "Combined geopolitical + inflation tail supports gold through Step 7"
+        }
+      ],
+      "timing_thresholds": {
+        "USO_entry_before_step": 4,
+        "GLD_entry_before_step": 7,
+        "TLT_short_before_step": 7
+      }
+    },
+    {
+      "scenario_id": "causal_chain_002",
+      "task_type": "causal_chain",
+      "max_steps": 10,
+      "description": "Fed pivot cycle: surprise dovish pivot → equity rally → tech earnings beat → broad risk-on. Agent must maintain risk-on positioning through noise.",
+      "signal_schedule": [
+        {
+          "step": 1,
+          "events": [
+            {
+              "event_type": "rates_move",
+              "asset": "TLT",
+              "magnitude": 0.80,
+              "step": 1
+            }
+          ]
+        },
+        {"step": 2, "events": []},
+        {"step": 3, "events": []},
+        {
+          "step": 4,
+          "events": [
+            {
+              "event_type": "equity_shock",
+              "asset": "SPY",
+              "magnitude": 0.85,
+              "step": 4
+            }
+          ]
+        },
+        {
+          "step": 5,
+          "events": [
+            {
+              "event_type": "commodity_shock",
+              "asset": "USO",
+              "magnitude": -0.40,
+              "step": 5
+            }
+          ]
+        },
+        {"step": 6, "events": []},
+        {
+          "step": 7,
+          "events": [
+            {
+              "event_type": "equity_shock",
+              "asset": "SPY",
+              "magnitude": 0.75,
+              "step": 7
+            }
+          ]
+        },
+        {"step": 8, "events": []},
+        {"step": 9, "events": []},
+        {"step": 10, "events": []}
+      ],
+      "price_path": {
+        "SPY": [450.0, 455.0, 458.0, 460.0, 468.0, 472.0, 474.0, 480.0, 483.0, 485.0, 487.5],
+        "TLT": [95.0, 98.0, 99.5, 100.0, 100.5, 100.8, 101.0, 101.5, 101.8, 102.0, 102.2],
+        "GLD": [180.0, 181.0, 181.5, 182.0, 181.5, 181.0, 181.5, 182.0, 182.5, 183.0, 183.5],
+        "USO": [100.0, 100.5, 100.2, 100.0, 99.5, 97.5, 97.0, 97.5, 98.0, 98.5, 99.0]
+      },
+      "benchmark_weights": {"SPY": 0.6, "TLT": 0.4},
+      "max_transaction_cost": 0.06,
+      "correct_direction": {"SPY": 1, "TLT": 1, "USO": -1},
+      "causal_chain": [
+        {
+          "step": 1,
+          "linked_step": 4,
+          "asset": "SPY",
+          "expected_direction": 1,
+          "description": "Dovish Fed pivot in Step 1 sets up equity rally in Step 4"
+        },
+        {
+          "step": 4,
+          "linked_step": 7,
+          "asset": "SPY",
+          "expected_direction": 1,
+          "description": "Equity rally in Step 4 continues through Step 7 earnings"
+        },
+        {
+          "step": 1,
+          "linked_step": 4,
+          "asset": "TLT",
+          "expected_direction": 1,
+          "description": "Rate cut expectations from Step 1 support bond prices"
+        }
+      ],
+      "timing_thresholds": {
+        "SPY_entry_before_step": 4,
+        "TLT_entry_before_step": 4,
+        "USO_short_before_step": 5
+      }
+    }
+  ]
+}
