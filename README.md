@@ -202,12 +202,16 @@ curl http://localhost:7860/health
 
 Measured with `gpt-4o` via `inference.py`:
 
+Measured with `llama-3.3-70b-versatile` via Groq (`inference.py`):
+
 | Task | Difficulty | Score |
 |------|-----------|-------|
-| single_event | Easy | 0.72 |
-| regime_shift | Medium | 0.55 |
-| causal_chain | Hard | 0.38 |
-| Mean | | 0.55 |
+| single_event | Easy | 0.8298 |
+| regime_shift | Medium | 0.8758 |
+| causal_chain | Hard | 0.1940 |
+| Mean | | 0.6332 |
+
+The causal_chain score reflects Groq rate limiting causing a WebSocket timeout at step 8, ending the episode early before the terminal reward was computed. The agent correctly entered USO and GLD at step 1 ahead of the supply shock at step 4, demonstrating the intended timing reasoning. A faster endpoint will score higher.
 
 ## Project Structure
 
