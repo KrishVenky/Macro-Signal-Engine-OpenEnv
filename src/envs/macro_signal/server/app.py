@@ -278,8 +278,15 @@ WEB_UI_HTML = """<!DOCTYPE html>
 
           if (obs.signal_events && obs.signal_events.length > 0) {
             obs.signal_events.forEach(ev => {
-              log(`SIGNAL: ${ev.event_type} | ${ev.asset} | magnitude=${ev.magnitude.toFixed(2)}`, 'signal');
+              const dir = ev.magnitude > 0 ? 'BULLISH' : 'BEARISH';
+              log(`SIGNAL: ${ev.event_type} | ${ev.asset} | magnitude=${ev.magnitude.toFixed(2)} (${dir})`, 'signal');
             });
+            // Hint: derive the correct action from signals
+            const hints = obs.signal_events.map(ev => {
+              if (ev.magnitude > 0) return `→ Consider LONG ${ev.asset}`;
+              else return `→ Consider SHORT ${ev.asset}`;
+            });
+            log(`HINT: ${hints.join(' | ')}`, 'ts');
           }
           if (obs.step_reward > 0) log(`Step reward: +${obs.step_reward.toFixed(4)}`, 'reward');
           if (obs.done) log(`EPISODE DONE — Final reward: ${obs.reward.toFixed(4)}`, 'reward');
