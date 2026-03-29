@@ -24,13 +24,16 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY --chown=user src/ ./src/
 COPY --chown=user data/ ./data/
 
-# Install the package itself (for module resolution)
-RUN pip install --no-cache-dir -e .
+# Add src/envs to PYTHONPATH so `macro_signal` is importable without editable install
+# (avoids needing hatchling at runtime and is more reliable in Docker)
+ENV PYTHONPATH="/app/src/envs:${PYTHONPATH}"
 
 # HF Spaces default port — MUST be 7860
 ENV PORT=7860
 ENV HOST=0.0.0.0
-ENV WORKERS=2
+# WORKERS=1 is required for WebSocket stateful sessions —
+# multiple workers = separate processes = session state lost between reconnects
+ENV WORKERS=1
 ENV MAX_CONCURRENT_ENVS=50
 
 EXPOSE 7860
