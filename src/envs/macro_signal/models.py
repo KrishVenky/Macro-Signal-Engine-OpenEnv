@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_config
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 ASSETS = Literal["SPY", "GLD", "USO", "TLT"]
@@ -31,7 +31,7 @@ URGENCY = Literal["immediate", "next_step", "hold"]
 
 
 class SignalEvent(BaseModel):
-    model_config = model_config(frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     event_type: EVENT_TYPES = Field(description="Category of macroeconomic signal")
     asset: ASSETS = Field(description="Primary asset affected by this signal")
@@ -44,7 +44,7 @@ class SignalEvent(BaseModel):
 
 
 class PortfolioPosition(BaseModel):
-    model_config = model_config(frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     asset: ASSETS = Field(description="Asset ticker")
     weight: float = Field(
@@ -58,7 +58,7 @@ class PortfolioPosition(BaseModel):
 
 
 class TradeInstruction(BaseModel):
-    model_config = model_config(frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     asset: ASSETS = Field(description="Asset to trade")
     target_weight: float = Field(
@@ -78,7 +78,7 @@ class TradeInstruction(BaseModel):
 
 
 class MacroSignalAction(BaseModel):
-    model_config = model_config(frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     trade_instructions: List[TradeInstruction] = Field(
         default_factory=list,
@@ -107,7 +107,7 @@ class MacroSignalAction(BaseModel):
 
 
 class MacroSignalObservation(BaseModel):
-    model_config = model_config(frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     # Episode context
     step: int = Field(ge=0, description="Current step index (0 = post-reset)")
@@ -173,7 +173,7 @@ class MacroSignalObservation(BaseModel):
 
 
 class MacroSignalState(BaseModel):
-    model_config = model_config(frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     episode_id: str = Field(description="Unique identifier for this episode session")
     task_type: TASK_TYPES
@@ -191,7 +191,7 @@ class MacroSignalState(BaseModel):
 
 
 class StepResult(BaseModel):
-    model_config = model_config(frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     observation: MacroSignalObservation
     reward: float = Field(ge=0.0, le=1.0)
