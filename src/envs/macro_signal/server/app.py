@@ -201,7 +201,7 @@ WEB_UI_HTML = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Macro Signal Engine</title>
+  <title>Macro Signal Engine | OpenEnv</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0a0e1a; color: #00ff88; font-family: 'Courier New', monospace; padding: 20px; }
@@ -224,7 +224,7 @@ WEB_UI_HTML = """<!DOCTYPE html>
   </style>
 </head>
 <body>
-  <h1>📈 Macro Signal Engine</h1>
+  <h1>Macro Signal Engine</h1>
   <p class="subtitle">OpenEnv — LLM Agent as Macro Quant Analyst | Tasks: single_event · regime_shift · causal_chain</p>
 
   <div class="stats">

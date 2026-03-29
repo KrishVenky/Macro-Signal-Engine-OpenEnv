@@ -1,43 +1,43 @@
-# Macro Signal Engine — Hard Constraints
+# Macro Signal Engine: Hard Constraints
 
-## Competition Rules (NEVER VIOLATE)
-- inference.py MUST use OpenAI client only — no anthropic, no transformers, no local models
-- Required env vars: API_BASE_URL, MODEL_NAME, HF_TOKEN — never hardcode these
-- inference.py runtime MUST be < 20 minutes total across all 3 tasks
-- Machine budget: 2 vCPU, 8 GB RAM — no scipy, statsmodels, torch, or heavy libs
-- Rewards MUST be floats in [0.0, 1.0] — assert this at every grader return point
-- 3 tasks minimum: single_event (easy), regime_shift (medium), causal_chain (hard)
-- Graders MUST be deterministic — no random seeds at grader call time
+## Competition Rules
+- inference.py must use the OpenAI client only. No anthropic, transformers, or local models.
+- Required env vars: API_BASE_URL, MODEL_NAME, HF_TOKEN. Never hardcode these.
+- Total inference.py runtime must be under 20 minutes across all 3 tasks.
+- Stay within 2 vCPU and 8 GB RAM. No scipy, statsmodels, torch, or heavy libraries.
+- All rewards must be floats in [0.0, 1.0]. Assert this at every grader return point.
+- Three tasks required: single_event (easy), regime_shift (medium), causal_chain (hard).
+- Graders must be deterministic. No random seeds at grader call time.
 
-## OpenEnv Spec (NEVER VIOLATE)
-- Port MUST be read from os.environ["PORT"], default 7860 for HF Spaces (NOT 8000)
-- Dockerfile MUST use non-root user (useradd / USER user) — HF Spaces requirement
-- WebSocket (/ws) is PRIMARY transport — HTTP /reset /step are debug-only
-- openenv.yaml MUST be present and valid — checked by openenv validate
-- All Pydantic models use model_config = {"frozen": True}
+## OpenEnv Spec
+- Port is always read from os.environ["PORT"], defaulting to 7860 for HF Spaces. Never hardcode 8000.
+- Dockerfile must use a non-root user (useradd / USER user). HF Spaces will reject builds without this.
+- WebSocket (/ws) is the primary transport. HTTP /reset and /step are for debug use only.
+- openenv.yaml must be present and valid. Checked by openenv validate.
+- All Pydantic models use ConfigDict(frozen=True).
 
-## Dependency Direction (NEVER REVERSE)
-- models.py has NO local imports
-- client.py imports from models.py ONLY
-- server/environment.py imports from models.py ONLY
-- server/app.py imports from server/environment.py and models.py
-- inference.py imports from client.py and models.py
-- NOTHING imports from server/ except app.py
+## Dependency Direction
+- models.py has no local imports.
+- client.py imports from models.py only.
+- server/environment.py imports from models.py only.
+- server/app.py imports from server/environment.py and models.py.
+- inference.py imports from client.py and models.py.
+- Nothing imports from server/ except app.py.
 
 ## Reward Rules
-- All grader functions MUST end with: assert 0.0 <= reward <= 1.0, f"Reward {reward} out of range"
-- Step-level partial rewards required — not just terminal rewards
-- Penalize no-ops: -0.02 per idle step when signal_events is non-empty (after normalization)
-- Transaction cost penalty built into causal_chain grader
+- Every grader function must end with: assert 0.0 <= reward <= 1.0
+- Step-level partial rewards are required. Terminal-only rewards will fail the rubric check.
+- Idle penalty applies when the agent holds during a step with non-empty signal_events.
+- Transaction costs are deducted from NAV, not reward directly.
 
-## Scenario Bank Rules
-- data/scenarios.json is the ONLY source of scenario data — no hardcoded scenarios in env
-- price_path MUST have exactly max_steps + 1 entries per asset
-- Validate scenarios at server startup — fail fast if malformed
-- scenario_id values must be globally unique across all task types
+## Scenario Bank
+- data/scenarios.json is the only source of scenario data. No hardcoded scenarios in env code.
+- price_path must have exactly max_steps + 1 entries per asset. Validated at startup.
+- scenario_id values must be globally unique across all task types.
 
 ## Code Style
-- No print() in server code — use logging
-- All async functions in app.py, all sync in environment.py
-- Type hints on every function signature
-- No bare except: — always catch specific exception types
+- No print() in server code. Use logging.
+- All async functions live in app.py. All sync logic lives in environment.py.
+- Type hints on every function signature.
+- No bare except. Always catch specific exception types.
+- WORKERS=1 always. Multiple workers break WebSocket session state.
