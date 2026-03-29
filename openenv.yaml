@@ -23,7 +23,7 @@ space_url: "https://krishvenky-macro-signal-env.hf.space"
 env:
   PORT: "7860"
   HOST: "0.0.0.0"
-  WORKERS: "2"
+  WORKERS: "1"
   MAX_CONCURRENT_ENVS: "50"
 tasks:
   - id: single_event
