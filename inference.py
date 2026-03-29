@@ -250,7 +250,11 @@ async def run_episode(
                 action.reasoning[:80],
             )
 
-            result = await env.step(action)
+            try:
+                result = await asyncio.wait_for(env.step(action), timeout=30.0)
+            except asyncio.TimeoutError:
+                logger.warning("Step timed out, ending episode early")
+                break
             obs = result.observation
             final_reward = result.reward
 

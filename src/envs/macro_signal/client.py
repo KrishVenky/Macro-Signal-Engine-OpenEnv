@@ -60,7 +60,7 @@ class MacroSignalEnv:
 
     async def _connect(self) -> None:
         logger.info("Connecting to %s", self._ws_url)
-        self._ws = await websockets.connect(self._ws_url, ping_interval=30, ping_timeout=10)
+        self._ws = await websockets.connect(self._ws_url, ping_interval=20, ping_timeout=60)
         logger.info("Connected")
 
     async def _disconnect(self) -> None:
