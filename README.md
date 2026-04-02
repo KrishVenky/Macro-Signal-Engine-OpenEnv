@@ -1,3 +1,19 @@
+---
+title: Macro Signal Engine
+emoji: 💹
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+license: mit
+tags:
+  - openenv
+  - finance
+  - macro
+  - portfolio-management
+  - reinforcement-learning
+  - llm-agent
+---
 
 # Macro Signal Engine
 
