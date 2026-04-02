@@ -1,5 +1,5 @@
 """
-Macro Signal Engine — Core Environment Logic
+Macro Signal Engine: Core Environment Logic
 =============================================
 One instance per WebSocket session. All state is per-instance (never shared).
 Imports only from models.py and stdlib/json.
@@ -27,14 +27,12 @@ from ..models import (
 
 logger = logging.getLogger(__name__)
 
-COST_RATE = 0.001  # 10 bps per unit of weight changed — realistic for liquid ETFs
+COST_RATE = 0.001  # 10 bps per unit of weight changed, realistic for liquid ETFs
 INITIAL_NAV = 1.0
 IDLE_PENALTY = 0.02  # deducted from step reward when holding during high-signal step
 
 
-# ---------------------------------------------------------------------------
-# Scenario loader (module-level cache — loaded once at first import)
-# ---------------------------------------------------------------------------
+# Scenario loader (module-level cache, loaded once at first import)
 
 def _find_scenarios_path() -> Path:
     """Locate scenarios.json relative to this file or the repo root."""
@@ -67,7 +65,7 @@ def _load_scenario_bank() -> Dict[str, Any]:
     with open(_SCENARIOS_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    # Validate all scenarios at startup — fail fast
+    # Validate all scenarios at startup, fail fast
     scenario_ids = set()
     for s in data["scenarios"]:
         sid = s["scenario_id"]
@@ -89,9 +87,7 @@ def _load_scenario_bank() -> Dict[str, Any]:
     return _SCENARIO_CACHE
 
 
-# ---------------------------------------------------------------------------
 # Environment
-# ---------------------------------------------------------------------------
 
 
 class MacroSignalEnvironment:
@@ -119,9 +115,7 @@ class MacroSignalEnvironment:
         self._total_transaction_cost: float = 0.0
         self._history: List[Dict[str, Any]] = []  # for causal_chain grader
 
-    # ------------------------------------------------------------------
     # Public API
-    # ------------------------------------------------------------------
 
     def reset(
         self,
@@ -231,9 +225,7 @@ class MacroSignalEnvironment:
             done=self._done,
         )
 
-    # ------------------------------------------------------------------
     # Trade execution
-    # ------------------------------------------------------------------
 
     def _execute_trades(self, instructions: List[TradeInstruction]) -> float:
         """Apply trade instructions. Returns total transaction cost incurred."""
@@ -271,13 +263,11 @@ class MacroSignalEnvironment:
 
         return total_cost
 
-    # ------------------------------------------------------------------
     # Price simulation
-    # ------------------------------------------------------------------
 
     def _advance_prices(self) -> None:
         """Move to the next price step using the scenario price path."""
-        # Price path indexed 0..max_steps — step N uses price_path[N]
+        # Price path indexed 0..max_steps: step N uses price_path[N]
         # After executing trades at step N, prices move to price_path[N]
         for asset in ["SPY", "GLD", "USO", "TLT"]:
             new_price = self._scenario["price_path"][asset][self._step]
@@ -292,9 +282,7 @@ class MacroSignalEnvironment:
         idx = min(self._step, self._max_steps)
         return self._scenario["price_path"][asset][idx]
 
-    # ------------------------------------------------------------------
     # Signal helpers
-    # ------------------------------------------------------------------
 
     def _get_signals_at_step(self, step: int) -> List[Dict[str, Any]]:
         for entry in self._scenario["signal_schedule"]:
@@ -306,9 +294,7 @@ class MacroSignalEnvironment:
         """True if current step has non-empty signal events."""
         return len(self._get_signals_at_step(self._step)) > 0
 
-    # ------------------------------------------------------------------
     # Reward computation
-    # ------------------------------------------------------------------
 
     def _compute_reward(self, action: MacroSignalAction) -> float:
         task = self._scenario["task_type"]
@@ -399,8 +385,8 @@ class MacroSignalEnvironment:
         if not causal_links:
             return 0.0
 
-        # Find which causal links are "active" — their trigger step <= current step
-        # and their consequence step > current step (i.e., agent should be positioning now)
+        # Find which causal links are "active": trigger step <= current step
+        # and consequence step > current step (i.e., agent should be positioning now)
         reward_components = []
         for link in causal_links:
             trigger_step = link["step"]
@@ -422,11 +408,9 @@ class MacroSignalEnvironment:
             return 0.2  # neutral when no active causal window
 
         step_score = sum(reward_components) / len(reward_components)
-        return float(min(1.0, max(0.0, step_score * 0.4)))  # scale down — terminal reward is primary
+        return float(min(1.0, max(0.0, step_score * 0.4)))  # scale down, terminal reward is primary
 
-    # ------------------------------------------------------------------
     # Terminal / episode reward
-    # ------------------------------------------------------------------
 
     def _compute_episode_reward(self) -> float:
         task = self._scenario["task_type"]
@@ -529,11 +513,11 @@ class MacroSignalEnvironment:
             if first_entry_step is None:
                 timing_scores.append(0.0)  # never entered
             elif first_entry_step < threshold_step:
-                timing_scores.append(1.0)  # entered before consequence — full credit
+                timing_scores.append(1.0)  # entered before consequence, full credit
             elif first_entry_step == threshold_step:
-                timing_scores.append(0.5)  # entered at consequence — partial credit
+                timing_scores.append(0.5)  # entered at consequence, partial credit
             else:
-                timing_scores.append(0.1)  # entered after — minimal credit
+                timing_scores.append(0.1)  # entered after, minimal credit
 
         timing_bonus = sum(timing_scores) / len(timing_scores) if timing_scores else 0.5
 
@@ -555,9 +539,7 @@ class MacroSignalEnvironment:
         assert 0.0 <= episode_reward <= 1.0, f"Causal chain reward {episode_reward} out of range"
         return float(min(1.0, max(0.0, episode_reward)))
 
-    # ------------------------------------------------------------------
     # Observation builder
-    # ------------------------------------------------------------------
 
     def _build_observation(
         self,

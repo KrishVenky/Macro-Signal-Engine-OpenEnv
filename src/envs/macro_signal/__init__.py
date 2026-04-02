@@ -1,4 +1,4 @@
-"""Macro Signal Engine — OpenEnv Environment Package"""
+"""Macro Signal Engine: OpenEnv Environment Package"""
 
 from .client import MacroSignalEnv, SyncMacroSignalEnv
 from .models import (

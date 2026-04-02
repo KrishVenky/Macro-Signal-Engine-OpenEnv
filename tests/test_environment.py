@@ -1,5 +1,5 @@
 """
-Tests for MacroSignalEnvironment — graders, portfolio logic, reward bounds.
+Tests for MacroSignalEnvironment: graders, portfolio logic, reward bounds.
 Run with: pytest tests/
 """
 
@@ -11,9 +11,7 @@ from src.envs.macro_signal.models import MacroSignalAction, TradeInstruction
 from src.envs.macro_signal.server.environment import MacroSignalEnvironment
 
 
-# ---------------------------------------------------------------------------
 # Fixtures
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -21,9 +19,7 @@ def env() -> MacroSignalEnvironment:
     return MacroSignalEnvironment()
 
 
-# ---------------------------------------------------------------------------
 # reset()
-# ---------------------------------------------------------------------------
 
 
 def test_reset_returns_observation(env):
@@ -51,9 +47,7 @@ def test_reset_unknown_task_type_raises(env):
         env.reset(task_type="invalid_task_type_xyz")
 
 
-# ---------------------------------------------------------------------------
 # step()
-# ---------------------------------------------------------------------------
 
 
 def test_step_after_done_raises(env):
@@ -100,9 +94,7 @@ def test_episode_reward_in_range_all_tasks(env):
         assert 0.0 <= result.reward <= 1.0, f"Reward {result.reward} out of range for task {task}"
 
 
-# ---------------------------------------------------------------------------
 # Grader: single_event
-# ---------------------------------------------------------------------------
 
 
 def test_single_event_correct_direction_gives_reward(env):
@@ -145,9 +137,7 @@ def test_single_event_speed_bonus_step1_gt_step2(env):
     assert reward_step1 > reward_step2
 
 
-# ---------------------------------------------------------------------------
 # Grader: regime_shift
-# ---------------------------------------------------------------------------
 
 
 def test_regime_shift_completes(env):
@@ -168,9 +158,7 @@ def test_regime_shift_completes(env):
     assert 0.0 <= result.reward <= 1.0
 
 
-# ---------------------------------------------------------------------------
 # Portfolio constraints
-# ---------------------------------------------------------------------------
 
 
 def test_weight_sum_exceeds_limit_is_clamped(env):
@@ -184,7 +172,7 @@ def test_weight_sum_exceeds_limit_is_clamped(env):
         ],
         reasoning="Overweight test",
     )
-    # Should not raise — environment clamps internally
+    # Should not raise: environment clamps internally
     result = env.step(action)
     total = sum(abs(env._weights[a]) for a in ["SPY", "GLD", "USO", "TLT"])
     assert total <= 1.0 + 1e-4
@@ -207,9 +195,7 @@ def test_nav_never_goes_negative(env):
             break
 
 
-# ---------------------------------------------------------------------------
 # Scenario bank
-# ---------------------------------------------------------------------------
 
 
 def test_all_scenarios_load_without_error():
@@ -237,9 +223,7 @@ def test_all_three_task_types_present():
     assert "causal_chain" in task_types
 
 
-# ---------------------------------------------------------------------------
 # Helper (accesses internal for testing)
-# ---------------------------------------------------------------------------
 
 
 def _task_type_for_test(self) -> str:

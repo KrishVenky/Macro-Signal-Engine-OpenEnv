@@ -1,5 +1,5 @@
 """
-Macro Signal Engine — Python Client
+Macro Signal Engine: Python Client
 =====================================
 Import MacroSignalEnv in your training code. Never import from server/.
 Supports both async (recommended) and sync usage.
@@ -47,9 +47,7 @@ class MacroSignalEnv:
         ) + "/ws"
         self._ws: Optional[Any] = None
 
-    # ------------------------------------------------------------------
     # Async context manager
-    # ------------------------------------------------------------------
 
     async def __aenter__(self) -> "MacroSignalEnv":
         await self._connect()
@@ -72,9 +70,7 @@ class MacroSignalEnv:
             self._ws = None
             logger.info("Disconnected")
 
-    # ------------------------------------------------------------------
     # Core API
-    # ------------------------------------------------------------------
 
     async def reset(
         self,
@@ -104,9 +100,7 @@ class MacroSignalEnv:
             raise RuntimeError(response.get("message", "Unknown server error"))
         return MacroSignalState.model_validate(response["data"])
 
-    # ------------------------------------------------------------------
     # Transport
-    # ------------------------------------------------------------------
 
     async def _send_and_receive(self, msg: Dict[str, Any]) -> Dict[str, Any]:
         if self._ws is None:
@@ -123,9 +117,7 @@ class MacroSignalEnv:
             raw = await self._ws.recv()
             return json.loads(raw)
 
-    # ------------------------------------------------------------------
     # Parsing
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _parse_step_result(response: Dict[str, Any]) -> StepResult:
@@ -134,9 +126,7 @@ class MacroSignalEnv:
         data = response.get("data", {})
         return StepResult.model_validate(data)
 
-    # ------------------------------------------------------------------
     # Sync wrapper
-    # ------------------------------------------------------------------
 
     def sync(self) -> "SyncMacroSignalEnv":
         """Return a synchronous wrapper for use without async/await."""

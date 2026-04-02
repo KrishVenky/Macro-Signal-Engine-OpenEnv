@@ -1,5 +1,5 @@
 """
-Macro Signal Engine — Pydantic Models
+Macro Signal Engine: Pydantic Models
 ======================================
 Single source of truth for all typed interfaces.
 Imported by client.py, server/environment.py, server/app.py, and inference.py.
@@ -25,9 +25,7 @@ TASK_TYPES = Literal["single_event", "regime_shift", "causal_chain"]
 URGENCY = Literal["immediate", "next_step", "hold"]
 
 
-# ---------------------------------------------------------------------------
 # Sub-models
-# ---------------------------------------------------------------------------
 
 
 class SignalEvent(BaseModel):
@@ -72,9 +70,7 @@ class TradeInstruction(BaseModel):
     )
 
 
-# ---------------------------------------------------------------------------
 # Action
-# ---------------------------------------------------------------------------
 
 
 class MacroSignalAction(BaseModel):
@@ -101,9 +97,7 @@ class MacroSignalAction(BaseModel):
         return instructions
 
 
-# ---------------------------------------------------------------------------
 # Observation
-# ---------------------------------------------------------------------------
 
 
 class MacroSignalObservation(BaseModel):
@@ -167,9 +161,7 @@ class MacroSignalObservation(BaseModel):
     )
 
 
-# ---------------------------------------------------------------------------
 # State
-# ---------------------------------------------------------------------------
 
 
 class MacroSignalState(BaseModel):
@@ -185,9 +177,7 @@ class MacroSignalState(BaseModel):
     done: bool
 
 
-# ---------------------------------------------------------------------------
 # StepResult (returned by client.step() and client.reset())
-# ---------------------------------------------------------------------------
 
 
 class StepResult(BaseModel):

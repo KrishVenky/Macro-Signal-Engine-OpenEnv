@@ -1,1 +1,1 @@
-"""Macro Signal Engine — Server Package"""
+"""Macro Signal Engine: Server Package"""

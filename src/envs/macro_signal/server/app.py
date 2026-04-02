@@ -1,9 +1,9 @@
 """
-Macro Signal Engine — FastAPI Server
+Macro Signal Engine: FastAPI Server
 ======================================
 WebSocket (/ws) is the primary transport for persistent sessions.
 HTTP endpoints (/reset, /step, /state) are available for debugging only.
-Port is read from os.environ["PORT"] — default 7860 for HF Spaces.
+Port is read from os.environ["PORT"], default 7860 for HF Spaces.
 """
 
 from __future__ import annotations
@@ -25,9 +25,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
 # Lifespan: validate scenario bank at startup
-# ---------------------------------------------------------------------------
 
 
 @asynccontextmanager
@@ -54,9 +52,7 @@ app = FastAPI(
 )
 
 
-# ---------------------------------------------------------------------------
 # Health check
-# ---------------------------------------------------------------------------
 
 
 @app.get("/health")
@@ -64,9 +60,7 @@ async def health() -> Dict[str, str]:
     return {"status": "healthy", "version": "1.0.0", "environment": "macro-signal-env"}
 
 
-# ---------------------------------------------------------------------------
-# WebSocket endpoint (PRIMARY — used by MacroSignalEnv client)
-# ---------------------------------------------------------------------------
+# WebSocket endpoint (primary transport, used by MacroSignalEnv client)
 
 
 @app.websocket("/ws")
@@ -156,18 +150,16 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
             pass
 
 
-# ---------------------------------------------------------------------------
-# HTTP endpoints (DEBUG / stateless — not for production HF Spaces use)
-# ---------------------------------------------------------------------------
+# HTTP endpoints (debug only, stateless, not for production HF Spaces use)
 
-# Stateless HTTP sessions share a single environment instance — FOR DEBUG ONLY
+# Stateless HTTP sessions share a single environment instance, for debug only
 _http_env = MacroSignalEnvironment()
 
 
 @app.post("/reset", response_model=StepResult)
 async def http_reset(task_type: Optional[str] = None, scenario_id: Optional[str] = None) -> StepResult:
     """
-    HTTP reset endpoint. Stateless — resets the shared debug environment.
+    HTTP reset endpoint. Stateless, resets the shared debug environment.
     WARNING: Not suitable for concurrent sessions. Use /ws for production.
     """
     obs = _http_env.reset(task_type=task_type, scenario_id=scenario_id)
@@ -177,7 +169,7 @@ async def http_reset(task_type: Optional[str] = None, scenario_id: Optional[str]
 @app.post("/step", response_model=StepResult)
 async def http_step(action: MacroSignalAction) -> StepResult:
     """
-    HTTP step endpoint. Stateless — operates on shared debug environment.
+    HTTP step endpoint. Stateless, operates on shared debug environment.
     WARNING: Not suitable for concurrent sessions. Use /ws for production.
     """
     try:
@@ -191,9 +183,7 @@ async def http_state() -> MacroSignalState:
     return _http_env.state()
 
 
-# ---------------------------------------------------------------------------
 # Web UI (interactive terminal for demos)
-# ---------------------------------------------------------------------------
 
 
 WEB_UI_HTML = """<!DOCTYPE html>
@@ -225,7 +215,7 @@ WEB_UI_HTML = """<!DOCTYPE html>
 </head>
 <body>
   <h1>Macro Signal Engine</h1>
-  <p class="subtitle">OpenEnv — LLM Agent as Macro Quant Analyst | Tasks: single_event · regime_shift · causal_chain</p>
+  <p class="subtitle">OpenEnv: LLM Agent as Macro Quant Analyst | Tasks: single_event · regime_shift · causal_chain</p>
 
   <div class="stats">
     <div class="stat"><div class="label">STEP</div><div class="value" id="stat-step">—</div></div>
@@ -289,7 +279,7 @@ WEB_UI_HTML = """<!DOCTYPE html>
             log(`HINT: ${hints.join(' | ')}`, 'ts');
           }
           if (obs.step_reward > 0) log(`Step reward: +${obs.step_reward.toFixed(4)}`, 'reward');
-          if (obs.done) log(`EPISODE DONE — Final reward: ${obs.reward.toFixed(4)}`, 'reward');
+          if (obs.done) log(`EPISODE DONE: Final reward: ${obs.reward.toFixed(4)}`, 'reward');
         } else if (msg.type === 'error') {
           log(`ERROR: ${msg.message}`, 'error');
         }
@@ -359,9 +349,7 @@ async def web_ui() -> HTMLResponse:
     return HTMLResponse(content=WEB_UI_HTML)
 
 
-# ---------------------------------------------------------------------------
 # Entry point
-# ---------------------------------------------------------------------------
 
 
 def run() -> None:

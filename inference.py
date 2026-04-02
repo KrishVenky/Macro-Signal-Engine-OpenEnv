@@ -1,5 +1,5 @@
 """
-Macro Signal Engine — Inference Script
+Macro Signal Engine: Inference Script
 =======================================
 MANDATORY:
 - API_BASE_URL   The API endpoint for the LLM (e.g. https://api.openai.com/v1)
@@ -32,9 +32,7 @@ from openai import AsyncOpenAI
 from src.envs.macro_signal.client import MacroSignalEnv
 from src.envs.macro_signal.models import MacroSignalAction, MacroSignalObservation, TradeInstruction
 
-# ---------------------------------------------------------------------------
-# Configuration — read from environment variables (NEVER hardcode)
-# ---------------------------------------------------------------------------
+# Configuration: read from environment variables (NEVER hardcode)
 
 API_BASE_URL: str = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
 API_KEY: str = os.environ.get("HF_TOKEN") or os.environ.get("OPENAI_API_KEY") or "none"
@@ -51,16 +49,14 @@ DEBUG: bool = os.environ.get("DEBUG", "0") == "1"
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
 # System prompt
-# ---------------------------------------------------------------------------
 
 SYSTEM_PROMPT = textwrap.dedent("""
 You are a macro quantitative analyst managing a portfolio of 4 assets:
-  - SPY  (S&P 500 ETF — broad equity exposure)
-  - GLD  (Gold ETF — safe haven / inflation hedge)
-  - USO  (Oil ETF — energy / geopolitical hedge)
-  - TLT  (Long-duration Treasury ETF — rates / deflation hedge)
+  - SPY  (S&P 500 ETF, broad equity exposure)
+  - GLD  (Gold ETF, safe haven / inflation hedge)
+  - USO  (Oil ETF, energy / geopolitical hedge)
+  - TLT  (Long-duration Treasury ETF, rates / deflation hedge)
 
 At each step you receive:
 - signal_events: typed macroeconomic signals with event_type, asset, and magnitude (signed)
@@ -75,7 +71,7 @@ CRITICAL RULES:
 3. target_weight is in [-1.0, +1.0]: positive = long, negative = short.
 4. Track causal chains: a geopolitical signal at step 1 may imply a supply shock at step 4.
    Enter positions BEFORE consequences materialize for maximum timing_bonus reward.
-5. Minimize unnecessary trading — each trade incurs 10bps cost.
+5. Minimize unnecessary trading, each trade incurs 10bps cost.
 
 Action JSON schema:
 {
@@ -85,12 +81,10 @@ Action JSON schema:
   "reasoning": "<your causal reasoning in 1-2 sentences>"
 }
 
-If you want to hold all positions: {"trade_instructions": [], "reasoning": "Hold — no new signal."}
+If you want to hold all positions: {"trade_instructions": [], "reasoning": "Hold, no new signal."}
 """).strip()
 
-# ---------------------------------------------------------------------------
 # Observation formatter
-# ---------------------------------------------------------------------------
 
 
 def format_observation(obs: MacroSignalObservation, step: int) -> str:
@@ -126,9 +120,7 @@ def format_observation(obs: MacroSignalObservation, step: int) -> str:
     return "\n".join(lines)
 
 
-# ---------------------------------------------------------------------------
 # Action parser (with graceful fallback)
-# ---------------------------------------------------------------------------
 
 
 def parse_action(response_text: str) -> MacroSignalAction:
@@ -174,9 +166,7 @@ def parse_action(response_text: str) -> MacroSignalAction:
         return FALLBACK_ACTION
 
 
-# ---------------------------------------------------------------------------
 # Episode runner
-# ---------------------------------------------------------------------------
 
 
 async def run_episode(
@@ -276,9 +266,7 @@ async def run_episode(
         return final_reward
 
 
-# ---------------------------------------------------------------------------
 # Main
-# ---------------------------------------------------------------------------
 
 
 async def main() -> None:
@@ -293,7 +281,7 @@ async def main() -> None:
     results: Dict[str, float] = {}
 
     print("\n" + "=" * 60)
-    print("  MACRO SIGNAL ENGINE — BASELINE INFERENCE RUN")
+    print("  MACRO SIGNAL ENGINE: BASELINE INFERENCE RUN")
     print("=" * 60)
     print(f"  Model:   {MODEL_NAME}")
     print(f"  Env URL: {ENV_URL}")
