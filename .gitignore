@@ -47,6 +47,11 @@ coverage.xml
 *.log
 logs/
 
+# Local scratch files
+audio.py
+*.mp3
+*.docx
+
 # HF / model artifacts — large files don't belong in git
 *.bin
 *.safetensors

@@ -31,10 +31,9 @@ ENV PYTHONPATH="/app/src/envs:${PYTHONPATH}"
 # HF Spaces default port — MUST be 7860
 ENV PORT=7860
 ENV HOST=0.0.0.0
-# WORKERS=1 is required for WebSocket stateful sessions —
-# multiple workers = separate processes = session state lost between reconnects
 ENV WORKERS=1
 ENV MAX_CONCURRENT_ENVS=50
+ENV ENABLE_WEB_INTERFACE=true
 
 EXPOSE 7860
 

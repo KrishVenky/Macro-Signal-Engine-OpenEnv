@@ -346,6 +346,8 @@ WEB_UI_HTML = """<!DOCTYPE html>
 
 @app.get("/web", response_class=HTMLResponse)
 async def web_ui() -> HTMLResponse:
+    if os.environ.get("ENABLE_WEB_INTERFACE", "true").lower() != "true":
+        raise HTTPException(status_code=404, detail="Web interface is disabled.")
     return HTMLResponse(content=WEB_UI_HTML)
 
 
