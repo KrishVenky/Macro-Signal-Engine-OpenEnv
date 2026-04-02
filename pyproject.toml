@@ -23,7 +23,7 @@ dev = [
 ]
 
 [project.scripts]
-server = "macro_signal.server.app:run"
+server = "server.app:main"
 macro-signal-server = "macro_signal.server.app:run"
 
 [build-system]

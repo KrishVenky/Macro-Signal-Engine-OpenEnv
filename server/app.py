@@ -1,5 +1,4 @@
 # Root-level entry point for openenv validate compatibility.
-# Re-exports app and run from the actual implementation.
 import sys
 import os
 
@@ -8,3 +7,11 @@ if _src not in sys.path:
     sys.path.insert(0, _src)
 
 from macro_signal.server.app import app, run  # noqa: F401
+
+
+def main():
+    run()
+
+
+if __name__ == "__main__":
+    main()

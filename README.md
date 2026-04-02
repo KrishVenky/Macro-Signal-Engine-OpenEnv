@@ -24,7 +24,7 @@ An [OpenEnv](https://github.com/meta-pytorch/OpenEnv) environment where an LLM a
 
 > Can an AI reason through a geopolitical crisis and anticipate its effect on oil prices three steps before the supply shock actually arrives?
 
-Most finance RL environments test "buy low, sell high." This one tests something harder: multi-step causal reasoning under uncertainty. A geopolitical shock at step 1 implies a supply disruption at step 4, which implies an inflation print at step 7. The optimal hedge needs to be in place at step 2. An agent that treats each observation independently will consistently underperform — that failure mode is exactly what this environment is designed to measure.
+Most finance RL environments test "buy low, sell high." This one tests something harder: multi-step causal reasoning under uncertainty. A geopolitical shock at step 1 implies a supply disruption at step 4, which implies an inflation print at step 7. The optimal hedge needs to be in place at step 2. An agent that treats each observation independently will consistently underperform - that failure mode is exactly what this environment is designed to measure.
 
 ## For Judges
 
@@ -94,7 +94,7 @@ Constraint: `sum(abs(target_weight))` across all instructions must be at or belo
 
 ### single_event (Easy)
 
-A 3-step episode with one clear macroeconomic signal at step 1. The agent needs to take the correct directional position before the episode ends. Speed matters — acting at step 1 scores higher than acting at step 3.
+A 3-step episode with one clear macroeconomic signal at step 1. The agent needs to take the correct directional position before the episode ends. Speed matters - acting at step 1 scores higher than acting at step 3.
 
 Example: `commodity_shock | USO | magnitude=+0.85` means oil supply shock, go long USO.
 
@@ -118,12 +118,12 @@ Expected scores: random ~0.25, GPT-4o ~0.55
 
 ### causal_chain (Hard)
 
-A 10-step episode with three causally linked events spaced 3 steps apart. This is where most LLM agents fail. The `timing_bonus` specifically rewards positions entered before the consequence materialises — agents that react rather than anticipate get partial credit at best.
+A 10-step episode with three causally linked events spaced 3 steps apart. This is where most LLM agents fail. The `timing_bonus` specifically rewards positions entered before the consequence materialises - agents that react rather than anticipate get partial credit at best.
 
 ```
 Step 1:  geopolitical signal (conflict in oil-producing region)
-Step 4:  commodity_shock (supply disruption — consequence of step 1)
-Step 7:  inflation_print (CPI spike — consequence of step 4)
+Step 4:  commodity_shock (supply disruption - consequence of step 1)
+Step 7:  inflation_print (CPI spike - consequence of step 4)
 
 Optimal: long USO and GLD entered at step 2, short TLT at step 3
 Reactive: entering at step 4 or 7 is correct direction but loses timing_bonus
@@ -141,9 +141,9 @@ Expected scores: random ~0.12, GPT-4o without memory prompting ~0.38, GPT-4o wit
 | Component | How it works |
 |-----------|-------------|
 | Directional accuracy | Fraction of positions where the sign matches the signal |
-| Speed bonus | `1.0 / step` — earlier correct action scores higher |
+| Speed bonus | `1.0 / step` - earlier correct action scores higher |
 | Timing bonus | 1.0 if positioned before the causal consequence arrives, 0.5 if at the same step, 0.1 if after |
-| Cost efficiency | `1 - (transaction_costs / max_allowed)` — penalises excessive churning |
+| Cost efficiency | `1 - (transaction_costs / max_allowed)` - penalises excessive churning |
 | Idle penalty | Small deduction for holding when actionable signals are present |
 
 All rewards are in `[0.0, 1.0]`. Transaction cost is 10 basis points per unit of weight changed, deducted from NAV.
@@ -164,7 +164,7 @@ async def main():
 
         action = MacroSignalAction(
             trade_instructions=[TradeInstruction(asset="USO", target_weight=0.6)],
-            reasoning="Oil supply shock — go long USO"
+            reasoning="Oil supply shock - go long USO"
         )
         result = await env.step(action)
         print(f"Reward: {result.reward}")
@@ -200,8 +200,6 @@ curl http://localhost:7860/health
 
 ## Baseline Scores
 
-Measured with `gpt-4o` via `inference.py`:
-
 Measured with `llama-3.3-70b-versatile` via Groq (`inference.py`):
 
 | Task | Difficulty | Score |
@@ -217,6 +215,8 @@ The causal_chain score reflects Groq rate limiting causing a WebSocket timeout a
 
 ```
 macro-signal-env/
+├── server/
+│   └── app.py             Entry point (openenv validate compatible)
 ├── src/envs/macro_signal/
 │   ├── models.py          Pydantic typed contracts (single source of truth)
 │   ├── client.py          WebSocket client for training code
@@ -228,6 +228,7 @@ macro-signal-env/
 ├── openenv.yaml           OpenEnv spec metadata
 ├── Dockerfile             HF Spaces deployment
 ├── inference.py           Baseline agent script
+├── uv.lock                Locked dependencies
 ├── ARCHITECTURE.md        Reward design and session lifecycle docs
 └── tests/
     └── test_environment.py
