@@ -344,6 +344,14 @@ WEB_UI_HTML = """<!DOCTYPE html>
 </html>"""
 
 
+@app.get("/", response_class=HTMLResponse)
+async def root() -> HTMLResponse:
+    if os.environ.get("ENABLE_WEB_INTERFACE", "true").lower() == "true":
+        return HTMLResponse(content=WEB_UI_HTML)
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/docs")
+
+
 @app.get("/web", response_class=HTMLResponse)
 async def web_ui() -> HTMLResponse:
     if os.environ.get("ENABLE_WEB_INTERFACE", "true").lower() != "true":
