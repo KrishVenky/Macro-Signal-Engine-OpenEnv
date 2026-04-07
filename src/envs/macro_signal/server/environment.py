@@ -31,6 +31,15 @@ COST_RATE = 0.001  # 10 bps per unit of weight changed, realistic for liquid ETF
 INITIAL_NAV = 1.0
 IDLE_PENALTY = 0.02  # deducted from step reward when holding during high-signal step
 
+# Validator requires scores strictly between 0 and 1 (exclusive)
+_SCORE_MIN = 0.01
+_SCORE_MAX = 0.99
+
+
+def _clamp(value: float) -> float:
+    """Clamp reward to (0.01, 0.99) — strictly between 0 and 1 as required."""
+    return float(max(_SCORE_MIN, min(_SCORE_MAX, value)))
+
 
 # Scenario loader (module-level cache, loaded once at first import)
 
@@ -316,7 +325,7 @@ class MacroSignalEnvironment:
         if is_idle and self._has_actionable_signals():
             reward = max(0.0, reward - IDLE_PENALTY)
 
-        assert 0.0 <= reward <= 1.0, f"Step reward {reward} out of range [0.0, 1.0]"
+        assert _SCORE_MIN <= reward <= _SCORE_MAX, f"Step reward {reward} out of range"
         return reward
 
     def _grade_single_event_step(self, action: MacroSignalAction) -> float:
@@ -345,7 +354,7 @@ class MacroSignalEnvironment:
         speed_bonus = 1.0 / self._step  # step 1=1.0, step 2=0.5, step 3=0.33
 
         reward = directional_score * speed_bonus
-        return float(min(1.0, max(0.0, reward)))
+        return _clamp(reward)
 
     def _grade_regime_shift_step(self) -> float:
         """
@@ -408,7 +417,7 @@ class MacroSignalEnvironment:
             return 0.2  # neutral when no active causal window
 
         step_score = sum(reward_components) / len(reward_components)
-        return float(min(1.0, max(0.0, step_score * 0.4)))  # scale down, terminal reward is primary
+        return _clamp(step_score * 0.4)  # scale down, terminal reward is primary
 
     # Terminal / episode reward
 
@@ -424,7 +433,7 @@ class MacroSignalEnvironment:
         else:
             reward = 0.0
 
-        assert 0.0 <= reward <= 1.0, f"Episode reward {reward} out of range [0.0, 1.0]"
+        assert _SCORE_MIN <= reward <= _SCORE_MAX, f"Episode reward {reward} out of range"
         logger.info(
             "Episode %s done: task=%s reward=%.4f",
             self._episode_id[:8],
@@ -442,7 +451,7 @@ class MacroSignalEnvironment:
         best = max(self._step_rewards)
         mean = sum(self._step_rewards) / len(self._step_rewards)
         reward = 0.6 * best + 0.4 * mean
-        return float(min(1.0, max(0.0, reward)))
+        return _clamp(reward)
 
     def _terminal_regime_shift(self) -> float:
         """
@@ -464,7 +473,7 @@ class MacroSignalEnvironment:
 
         mean_step = sum(self._step_rewards) / len(self._step_rewards) if self._step_rewards else 0.0
         reward = 0.4 * pnl_ratio + 0.6 * mean_step
-        return float(min(1.0, max(0.0, reward)))
+        return _clamp(reward)
 
     def _terminal_causal_chain(self) -> float:
         """
@@ -536,8 +545,8 @@ class MacroSignalEnvironment:
         mean_step = sum(self._step_rewards) / len(self._step_rewards) if self._step_rewards else 0.0
         episode_reward = 0.3 * mean_step + 0.7 * terminal_reward
 
-        assert 0.0 <= episode_reward <= 1.0, f"Causal chain reward {episode_reward} out of range"
-        return float(min(1.0, max(0.0, episode_reward)))
+        assert _SCORE_MIN <= episode_reward <= _SCORE_MAX, f"Causal chain reward {episode_reward} out of range"
+        return _clamp(episode_reward)
 
     # Observation builder
 
