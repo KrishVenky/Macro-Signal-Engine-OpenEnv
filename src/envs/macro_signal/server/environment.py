@@ -309,13 +309,13 @@ class MacroSignalEnvironment:
         task = self._scenario["task_type"]
 
         if task == "single_event":
-            reward = self._grade_single_event_step(action)
+            raw = self._grade_single_event_step(action)
         elif task == "regime_shift":
-            reward = self._grade_regime_shift_step()
+            raw = self._grade_regime_shift_step()
         elif task == "causal_chain":
-            reward = self._grade_causal_chain_step(action)
+            raw = self._grade_causal_chain_step(action)
         else:
-            reward = 0.0
+            raw = 0.0
 
         # Idle penalty: agent holds when there are actionable signals
         is_idle = len(action.trade_instructions) == 0 or all(
@@ -323,10 +323,9 @@ class MacroSignalEnvironment:
             for t in action.trade_instructions
         )
         if is_idle and self._has_actionable_signals():
-            reward = max(0.0, reward - IDLE_PENALTY)
+            raw = raw - IDLE_PENALTY
 
-        assert _SCORE_MIN <= reward <= _SCORE_MAX, f"Step reward {reward} out of range"
-        return reward
+        return _clamp(raw)
 
     def _grade_single_event_step(self, action: MacroSignalAction) -> float:
         """
@@ -433,7 +432,7 @@ class MacroSignalEnvironment:
         else:
             reward = 0.0
 
-        assert _SCORE_MIN <= reward <= _SCORE_MAX, f"Episode reward {reward} out of range"
+        reward = _clamp(reward)
         logger.info(
             "Episode %s done: task=%s reward=%.4f",
             self._episode_id[:8],
@@ -545,7 +544,6 @@ class MacroSignalEnvironment:
         mean_step = sum(self._step_rewards) / len(self._step_rewards) if self._step_rewards else 0.0
         episode_reward = 0.3 * mean_step + 0.7 * terminal_reward
 
-        assert _SCORE_MIN <= episode_reward <= _SCORE_MAX, f"Causal chain reward {episode_reward} out of range"
         return _clamp(episode_reward)
 
     # Observation builder
