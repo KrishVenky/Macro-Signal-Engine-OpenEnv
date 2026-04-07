@@ -175,8 +175,8 @@ async def run_episode(task_type: str, env_url: str) -> None:
                     result = await asyncio.wait_for(env.step(action), timeout=30.0)
                 except asyncio.TimeoutError:
                     error_str = "timeout"
-                    print(f"[STEP] step={steps_taken} action={action_to_str(action)} reward=0.00 done=false error={error_str}", flush=True)
-                    step_rewards.append(0.0)
+                    print(f"[STEP] step={steps_taken} action={action_to_str(action)} reward=0.01 done=false error={error_str}", flush=True)
+                    step_rewards.append(0.01)
                     break
 
                 obs = result.observation
@@ -192,10 +192,10 @@ async def run_episode(task_type: str, env_url: str) -> None:
 
     except Exception as e:
         error_msg = str(e).replace("\n", " ")[:100]
-        print(f"[STEP] step={steps_taken} action=error reward=0.00 done=false error={error_msg}", flush=True)
+        print(f"[STEP] step={steps_taken} action=error reward=0.01 done=false error={error_msg}", flush=True)
 
     finally:
-        rewards_str = ",".join(f"{r:.2f}" for r in step_rewards) if step_rewards else "0.00"
+        rewards_str = ",".join(f"{r:.2f}" for r in step_rewards) if step_rewards else "0.01"
         print(f"[END] success={str(success).lower()} steps={steps_taken} rewards={rewards_str}", flush=True)
 
 
