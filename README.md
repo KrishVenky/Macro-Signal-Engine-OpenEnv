@@ -24,7 +24,15 @@ An [OpenEnv](https://github.com/meta-pytorch/OpenEnv) environment where an LLM a
 
 > Can an AI reason through a geopolitical crisis and anticipate its effect on oil prices three steps before the supply shock actually arrives?
 
-Most finance RL environments test "buy low, sell high." This one tests something harder: multi-step causal reasoning under uncertainty. A geopolitical shock at step 1 implies a supply disruption at step 4, which implies an inflation print at step 7. The optimal hedge needs to be in place at step 2. An agent that treats each observation independently will consistently underperform - that failure mode is exactly what this environment is designed to measure.
+## The Problem
+
+Every macro hedge fund employs analysts whose job is to connect events that are temporally separated. When conflict breaks out in an oil-producing region, the supply disruption does not arrive immediately — it arrives 2-3 weeks later. The inflation print arrives 6 weeks after that. A skilled analyst positions the portfolio before these consequences materialize, not after. This is called anticipatory reasoning, and it is genuinely hard.
+
+Most RL environments test reaction: given a price chart, what do you trade? That is pattern matching. This environment tests something different: given a typed event at step 1, can an agent reason forward through a causal chain and act before the consequences arrive at step 4 and step 7?
+
+This distinction matters because it maps directly to a known failure mode of LLMs used as agents. Without explicit causal tracking, frontier models tend to react to what is in the current observation and ignore what they saw three steps ago. The `causal_chain` task is specifically designed to expose and measure this gap. An agent that scores well on it is demonstrating a capability that is both commercially valuable and technically non-trivial.
+
+The environment simulates the daily workflow of a middle-office quant analyst: read incoming macro signals, assess portfolio exposure, decide whether to hedge or ride the position. The three tasks cover the full difficulty range from a single unambiguous signal (easy) to a multi-event causal chain requiring cross-step memory (hard).
 
 ## For Judges
 
