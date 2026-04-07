@@ -2,7 +2,7 @@
 # Builds a minimal FastAPI server for HF Spaces (port 7860, non-root user)
 # Runtime: python:3.11-slim | Dependencies: fastapi, uvicorn, pydantic, websockets
 
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 # HF Spaces security requirement: non-root user
 RUN useradd -m -u 1000 user
