@@ -33,7 +33,7 @@ tasks:
       React to a single unambiguous macroeconomic signal (e.g., oil supply shock)
       by taking the correct directional position within 3 steps.
     grader: directional_accuracy * speed_bonus
-    reward_range: [0.0, 1.0]
+    reward_range: [0.01, 0.99]
   - id: regime_shift
     difficulty: medium
     max_steps: 6
@@ -41,7 +41,7 @@ tasks:
       Manage a portfolio through a 6-step market regime (bull equity, rate-rising,
       or commodity supercycle). Track the benchmark by maintaining aligned exposures.
     grader: agent_pnl / benchmark_pnl with step-level alignment signals
-    reward_range: [0.0, 1.0]
+    reward_range: [0.01, 0.99]
   - id: causal_chain
     difficulty: hard
     max_steps: 10
@@ -51,7 +51,7 @@ tasks:
       the timing_bonus rewards positions entered before the causal event arrives.
       Most LLMs fail this task without explicit chain-of-thought reasoning.
     grader: 0.4*directional_accuracy + 0.4*timing_bonus + 0.2*cost_efficiency
-    reward_range: [0.0, 1.0]
+    reward_range: [0.01, 0.99]
 observation_space:
   type: object
   fields:
