@@ -10,27 +10,27 @@ The Macro Signal Engine is an OpenEnv environment where an LLM agent acts as a m
 ┌─────────────────────────────────────────────────────────┐
 │  inference.py / training code                           │
 │                                                         │
-│  client = MacroSignalEnv(base_url=HF_SPACE_URL)        │
-│  result  = client.reset(task_type="causal_chain")      │
-│  result  = client.step(MacroSignalAction(...))         │
+│  client = MacroSignalEnv(base_url=HF_SPACE_URL)         │
+│  result  = client.reset(task_type="causal_chain")       │
+│  result  = client.step(MacroSignalAction(...))          │ 
 └───────────────────┬─────────────────────────────────────┘
                     │  WebSocket /ws (primary transport)
                     │  HTTP /reset /step (debug only)
 ┌───────────────────▼─────────────────────────────────────┐
 │  FastAPI Server (app.py)                                │
 │                                                         │
-│  Each WebSocket connection gets a fresh env instance.  │
+│  Each WebSocket connection gets a fresh env instance.   │
 │                                                         │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  MacroSignalEnvironment (environment.py)         │  │
-│  │                                                  │  │
-│  │  _portfolio  _prices  _step  _history           │  │
-│  │  _scenario  loaded from data/scenarios.json     │  │
-│  │                                                  │  │
-│  │  reset()  MacroSignalObservation                │  │
-│  │  step()   MacroSignalObservation + reward       │  │
-│  │  state()  MacroSignalState                      │  │
-│  └──────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │  MacroSignalEnvironment (environment.py)         │   │
+│  │                                                  │   │
+│  │  _portfolio  _prices  _step  _history            │   │
+│  │  _scenario  loaded from data/scenarios.json      │   │
+│  │                                                  │   │
+│  │  reset()  MacroSignalObservation                 │   │
+│  │  step()   MacroSignalObservation + reward        │   │
+│  │  state()  MacroSignalState                       │   │
+│  └──────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────┘
 ```
 
