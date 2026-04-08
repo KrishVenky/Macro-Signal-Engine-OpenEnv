@@ -180,14 +180,15 @@ async def run_episode(task_type: str, env_url: str) -> None:
                     break
 
                 obs = result.observation
-                reward = obs.step_reward
+                # Use the final episode reward when done, step reward otherwise
+                reward = result.reward if obs.done else obs.step_reward
                 step_rewards.append(reward)
                 done_str = "true" if obs.done else "false"
 
                 print(f"[STEP] step={steps_taken} action={action_to_str(action)} reward={reward:.2f} done={done_str} error={error_str}", flush=True)
 
                 if obs.done:
-                    success = obs.reward > 0.0
+                    success = reward > 0.0
                     break
 
     except Exception as e:
