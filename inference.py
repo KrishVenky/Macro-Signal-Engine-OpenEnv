@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 import os
 import re
 import textwrap
@@ -40,6 +41,17 @@ MAX_STEPS: int = int(os.getenv("MAX_STEPS", "12"))
 
 # Sync OpenAI client as required by competition spec
 client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+
+
+def clamp_open_score(value: float, low: float = 0.01, high: float = 0.99, default: float = 0.5) -> float:
+    """Clamp to open interval (0,1). Guards against NaN/inf."""
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        numeric = default
+    if not math.isfinite(numeric):
+        numeric = default
+    return max(low, min(high, numeric))
 
 TEMPERATURE: float = 0.1
 MAX_TOKENS: int = 600
@@ -135,6 +147,7 @@ def action_to_str(action: MacroSignalAction) -> str:
 async def run_episode(task_type: str, env_url: str) -> None:
     step_rewards: List[float] = []
     steps_taken = 0
+    score = 0.5  # default mid-range until episode completes
     success = False
 
     print(f"[START] task={task_type} env=macro-signal-env model={MODEL_NAME}", flush=True)
@@ -180,15 +193,16 @@ async def run_episode(task_type: str, env_url: str) -> None:
                     break
 
                 obs = result.observation
-                # Use the final episode reward when done, step reward otherwise
-                reward = result.reward if obs.done else obs.step_reward
+                raw_reward = result.reward if obs.done else obs.step_reward
+                reward = clamp_open_score(raw_reward)
                 step_rewards.append(reward)
                 done_str = "true" if obs.done else "false"
 
                 print(f"[STEP] step={steps_taken} action={action_to_str(action)} reward={reward:.2f} done={done_str} error={error_str}", flush=True)
 
                 if obs.done:
-                    success = reward > 0.0
+                    score = clamp_open_score(result.reward)
+                    success = score > 0.5
                     break
 
     except Exception as e:
@@ -196,8 +210,10 @@ async def run_episode(task_type: str, env_url: str) -> None:
         print(f"[STEP] step={steps_taken} action=error reward=0.01 done=false error={error_msg}", flush=True)
 
     finally:
-        rewards_str = ",".join(f"{r:.2f}" for r in step_rewards) if step_rewards else "0.01"
-        print(f"[END] success={str(success).lower()} steps={steps_taken} rewards={rewards_str}", flush=True)
+        safe_score = clamp_open_score(score)
+        safe_rewards = [clamp_open_score(r) for r in step_rewards] if step_rewards else [0.5]
+        rewards_str = ",".join(f"{r:.2f}" for r in safe_rewards)
+        print(f"[END] success={str(success).lower()} steps={steps_taken} score={safe_score:.3f} rewards={rewards_str}", flush=True)
 
 
 async def main() -> None:
