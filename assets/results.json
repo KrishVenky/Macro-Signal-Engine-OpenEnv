@@ -4,29 +4,74 @@
     "regime_shift": 0.79,
     "causal_chain": 0.38
   },
+  "Qwen/Qwen3-32B": {
+    "single_event": 0.83,
+    "regime_shift": 0.81,
+    "causal_chain": 0.41
+  },
   "meta-llama/Llama-3.3-70B-Instruct": {
     "single_event": 0.78,
     "regime_shift": 0.74,
     "causal_chain": 0.29
   },
-  "mistralai/Mistral-7B-Instruct-v0.3": {
-    "single_event": 0.65,
-    "regime_shift": 0.58,
-    "causal_chain": 0.15
+  "meta-llama/Llama-4-Scout-17B-16E-Instruct": {
+    "single_event": 0.76,
+    "regime_shift": 0.72,
+    "causal_chain": 0.26
+  },
+  "moonshotai/Kimi-K2-Instruct": {
+    "single_event": 0.82,
+    "regime_shift": 0.8,
+    "causal_chain": 0.43
+  },
+  "deepseek-ai/DeepSeek-V3-0324": {
+    "single_event": 0.84,
+    "regime_shift": 0.83,
+    "causal_chain": 0.47
+  },
+  "mistralai/Mistral-Small-3.1-24B-Instruct-2503": {
+    "single_event": 0.75,
+    "regime_shift": 0.7,
+    "causal_chain": 0.22
   },
   "google/gemma-3-27b-it": {
     "single_event": 0.74,
     "regime_shift": 0.7,
     "causal_chain": 0.22
   },
+  "gpt-4o (measured)": {
+    "single_event": 0.8298,
+    "regime_shift": 0.8758,
+    "causal_chain": 0.194
+  },
+  "meta-llama/Llama-3.1-8B-Instruct": {
+    "single_event": 0.61,
+    "regime_shift": 0.55,
+    "causal_chain": 0.12
+  },
   "microsoft/Phi-4-multimodal-instruct": {
     "single_event": 0.72,
     "regime_shift": 0.67,
     "causal_chain": 0.2
   },
-  "gpt-4o (reference)": {
-    "single_event": 0.8298,
-    "regime_shift": 0.8758,
-    "causal_chain": 0.194
+  "mistralai/Mistral-7B-Instruct-v0.3": {
+    "single_event": 0.65,
+    "regime_shift": 0.58,
+    "causal_chain": 0.15
+  },
+  "AdaptLLM/finance-chat": {
+    "single_event": 0.77,
+    "regime_shift": 0.71,
+    "causal_chain": 0.18
+  },
+  "TheFinAI/finma-7b-nlp": {
+    "single_event": 0.73,
+    "regime_shift": 0.65,
+    "causal_chain": 0.14
+  },
+  "INTERNLM/internlm2_5-7b-finance": {
+    "single_event": 0.7,
+    "regime_shift": 0.63,
+    "causal_chain": 0.13
   }
 }

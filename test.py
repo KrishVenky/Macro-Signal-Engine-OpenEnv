@@ -59,11 +59,23 @@ TASKS = ["single_event", "regime_shift", "causal_chain"]
 # Free HF router models to benchmark by default
 # ---------------------------------------------------------------------------
 DEFAULT_MODELS = [
+    # --- Large frontier (same tier as that guy's benchmark) ---
     "Qwen/Qwen2.5-72B-Instruct",
+    "Qwen/Qwen3-32B",
     "meta-llama/Llama-3.3-70B-Instruct",
-    "mistralai/Mistral-7B-Instruct-v0.3",
+    "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+    "moonshotai/Kimi-K2-Instruct",
+    "deepseek-ai/DeepSeek-V3-0324",
+    "mistralai/Mistral-Small-3.1-24B-Instruct-2503",
     "google/gemma-3-27b-it",
+    # --- Smaller / faster ---
+    "meta-llama/Llama-3.1-8B-Instruct",
     "microsoft/Phi-4-multimodal-instruct",
+    "mistralai/Mistral-7B-Instruct-v0.3",
+    # --- Finance-specialized ---
+    "AdaptLLM/finance-chat",                    # LLaMA fine-tuned on finance corpus
+    "TheFinAI/finma-7b-nlp",                    # FinMA — FLARE benchmark finance LLM
+    "INTERNLM/internlm2_5-7b-finance",          # InternLM finance variant
 ]
 
 # ---------------------------------------------------------------------------
@@ -170,66 +182,107 @@ def generate_chart(results: Dict[str, Dict[str, float]]) -> None:
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         import matplotlib.ticker as ticker
+        import matplotlib.patches as mpatches
         import numpy as np
     except ImportError:
         print("matplotlib not installed — skipping chart. Run: pip install matplotlib numpy")
         return
 
-    # Sort models by avg score ascending (so best is at top)
+    # Categorise models for colour coding
+    FINANCE_MODELS = {"AdaptLLM/finance-chat", "TheFinAI/finma-7b-nlp", "INTERNLM/internlm2_5-7b-finance"}
+    SMALL_MODELS   = {"meta-llama/Llama-3.1-8B-Instruct", "mistralai/Mistral-7B-Instruct-v0.3",
+                      "microsoft/Phi-4-multimodal-instruct"}
+    REFERENCE      = {"gpt-4o (measured)"}
+
+    def model_color(name: str) -> str:
+        if name in FINANCE_MODELS:   return "#f0a500"   # gold  — finance-tuned
+        if name in REFERENCE:        return "#888888"   # grey  — proprietary reference
+        if name in SMALL_MODELS:     return "#5f9ea0"   # muted blue — small/fast
+        return "#4C9BE8"                                # bright blue — large open
+
+    # Sort by avg score ascending so best is at top of horizontal chart
     sorted_models = sorted(results.items(), key=lambda kv: avg_score(kv[1]))
     labels = [m for m, _ in sorted_models]
-    avgs = [avg_score(s) for _, s in sorted_models]
+    avgs   = [avg_score(s) for _, s in sorted_models]
+    task_scores = {
+        task: [clamp_open_score(s.get(task, 0.5)) for _, s in sorted_models]
+        for task in TASKS
+    }
 
-    # Colour palette — distinct per bar
-    COLORS = [
-        "#4C72B0", "#2e8b57", "#3d9970", "#4682b4", "#8B6914",
-        "#C44E52", "#8172B3", "#DA8BC3", "#cc5500", "#4e9a9a",
-        "#888888", "#b5651d",
-    ]
-
-    fig, ax = plt.subplots(figsize=(11, max(5, len(labels) * 0.72)))
+    n = len(labels)
+    fig, axes = plt.subplots(1, 2, figsize=(16, max(6, n * 0.70)),
+                             gridspec_kw={"width_ratios": [2.2, 1]})
     fig.patch.set_facecolor("#1a1a1a")
+
+    # ---- LEFT: overall avg horizontal bar chart ----
+    ax = axes[0]
     ax.set_facecolor("#1a1a1a")
-
     for spine in ax.spines.values():
-        spine.set_color("#444")
+        spine.set_color("#333")
     ax.tick_params(colors="#cccccc")
-    ax.xaxis.label.set_color("#cccccc")
 
-    y = np.arange(len(labels))
-    bars = ax.barh(
-        y, avgs,
-        color=[COLORS[i % len(COLORS)] for i in range(len(labels))],
-        edgecolor="#1a1a1a",
-        linewidth=0.6,
-        height=0.65,
-    )
+    y = np.arange(n)
+    colors = [model_color(m) for m in labels]
+    bars = ax.barh(y, avgs, color=colors, edgecolor="#1a1a1a", linewidth=0.5, height=0.62)
 
-    # Score labels on bars
     for bar, score in zip(bars, avgs):
-        ax.text(
-            bar.get_width() + 0.01,
-            bar.get_y() + bar.get_height() / 2,
-            f"{score:.2f}",
-            va="center", ha="left",
-            fontsize=9, color="#cccccc",
-        )
+        ax.text(bar.get_width() + 0.012, bar.get_y() + bar.get_height() / 2,
+                f"{score:.2f}", va="center", ha="left", fontsize=9, color="#dddddd")
 
-    ax.axvline(0.5, color="#ffd700", linestyle="--", linewidth=0.9, alpha=0.55, label="0.5 baseline")
-
+    ax.axvline(0.5, color="#ffd700", linestyle="--", linewidth=0.9, alpha=0.6)
     ax.set_yticks(y)
-    ax.set_yticklabels(labels, fontsize=10, color="#cccccc")
-    ax.set_xlabel("Average Episode Score  (0, 1)  — higher is better", fontsize=11, color="#cccccc")
-    ax.set_title(
-        "Macro Signal Engine — LLM Benchmark (avg across 3 tasks)",
-        fontsize=13, color="#00d4ff", pad=12, fontweight="bold",
-    )
-    ax.set_xlim(0, 1.12)
+    short_labels = [lbl.split("/")[-1] for lbl in labels]
+    ax.set_yticklabels(short_labels, fontsize=9.5, color="#cccccc")
+    ax.set_xlabel("Avg Episode Score  (0, 1)", fontsize=10, color="#cccccc", labelpad=6)
+    ax.set_title("Overall Average", fontsize=11, color="#00d4ff", pad=8, fontweight="bold")
+    ax.set_xlim(0, 1.13)
     ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%.1f"))
-    ax.grid(axis="x", color="#333", linewidth=0.5, linestyle="--")
+    ax.grid(axis="x", color="#2a2a2a", linewidth=0.6, linestyle="--")
 
-    ax.legend(loc="lower right", framealpha=0.3, facecolor="#1e3a5f",
-              edgecolor="#00d4ff", labelcolor="#cccccc", fontsize=9)
+    # Legend: categories
+    legend_patches = [
+        mpatches.Patch(color="#4C9BE8", label="Large open-source"),
+        mpatches.Patch(color="#5f9ea0", label="Small / fast"),
+        mpatches.Patch(color="#f0a500", label="Finance-specialized"),
+        mpatches.Patch(color="#888888", label="Proprietary reference"),
+        plt.Line2D([0], [0], color="#ffd700", linestyle="--", linewidth=1.2, label="0.5 baseline"),
+    ]
+    ax.legend(handles=legend_patches, loc="lower right", framealpha=0.25,
+              facecolor="#111", edgecolor="#444", labelcolor="#cccccc", fontsize=8)
+
+    # ---- RIGHT: per-task score heat-style bar chart ----
+    ax2 = axes[1]
+    ax2.set_facecolor("#1a1a1a")
+    for spine in ax2.spines.values():
+        spine.set_color("#333")
+    ax2.tick_params(colors="#cccccc")
+
+    task_colors = {"single_event": "#4CAF50", "regime_shift": "#2196F3", "causal_chain": "#F44336"}
+    task_display = {"single_event": "Single Event (Easy)", "regime_shift": "Regime Shift (Med)", "causal_chain": "Causal Chain (Hard)"}
+    bar_h = 0.20
+    offsets = [-bar_h, 0, bar_h]
+
+    for i, (task, offset) in enumerate(zip(TASKS, offsets)):
+        ax2.barh(y + offset, task_scores[task],
+                 height=bar_h * 0.88,
+                 color=task_colors[task],
+                 edgecolor="#1a1a1a", linewidth=0.4,
+                 label=task_display[task], alpha=0.88)
+
+    ax2.axvline(0.5, color="#ffd700", linestyle="--", linewidth=0.8, alpha=0.5)
+    ax2.set_yticks(y)
+    ax2.set_yticklabels(short_labels, fontsize=9.5, color="#cccccc")
+    ax2.set_xlabel("Score per Task", fontsize=10, color="#cccccc", labelpad=6)
+    ax2.set_title("Per-Task Breakdown", fontsize=11, color="#00d4ff", pad=8, fontweight="bold")
+    ax2.set_xlim(0, 1.05)
+    ax2.grid(axis="x", color="#2a2a2a", linewidth=0.6, linestyle="--")
+    ax2.legend(loc="lower right", framealpha=0.25, facecolor="#111",
+               edgecolor="#444", labelcolor="#cccccc", fontsize=8)
+
+    fig.suptitle(
+        "Macro Signal Engine — LLM Benchmark",
+        fontsize=14, color="#00d4ff", fontweight="bold", y=1.01,
+    )
 
     plt.tight_layout()
     plt.savefig(CHART_FILE, dpi=150, bbox_inches="tight", facecolor="#1a1a1a")
