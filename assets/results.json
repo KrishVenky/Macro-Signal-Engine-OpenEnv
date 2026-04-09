@@ -1,0 +1,32 @@
+{
+  "Qwen/Qwen2.5-72B-Instruct": {
+    "single_event": 0.81,
+    "regime_shift": 0.79,
+    "causal_chain": 0.38
+  },
+  "meta-llama/Llama-3.3-70B-Instruct": {
+    "single_event": 0.78,
+    "regime_shift": 0.74,
+    "causal_chain": 0.29
+  },
+  "mistralai/Mistral-7B-Instruct-v0.3": {
+    "single_event": 0.65,
+    "regime_shift": 0.58,
+    "causal_chain": 0.15
+  },
+  "google/gemma-3-27b-it": {
+    "single_event": 0.74,
+    "regime_shift": 0.7,
+    "causal_chain": 0.22
+  },
+  "microsoft/Phi-4-multimodal-instruct": {
+    "single_event": 0.72,
+    "regime_shift": 0.67,
+    "causal_chain": 0.2
+  },
+  "gpt-4o (reference)": {
+    "single_event": 0.8298,
+    "regime_shift": 0.8758,
+    "causal_chain": 0.194
+  }
+}
