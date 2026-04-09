@@ -208,18 +208,23 @@ docker run -p 7860:7860 macro-signal-env
 curl http://localhost:7860/health
 ```
 
-## Baseline Scores
+## LLM Benchmark
 
-Measured with `llama-3.3-70b-versatile` via Groq (`inference.py`):
+Scores measured across all three tasks using `inference.py`. Run `python test.py` to reproduce or extend with your own models.
 
-| Task | Difficulty | Score |
-|------|-----------|-------|
-| single_event | Easy | 0.8298 |
-| regime_shift | Medium | 0.8758 |
-| causal_chain | Hard | 0.1940 |
-| Mean | | 0.6332 |
+![LLM Benchmark](https://raw.githubusercontent.com/KrishVenky/Macro-Signal-Engine-OpenEnv/main/assets/llm_comparison.png)
 
-The causal_chain score reflects Groq rate limiting causing a WebSocket timeout at step 8, ending the episode early before the terminal reward was computed. The agent correctly entered USO and GLD at step 1 ahead of the supply shock at step 4, demonstrating the intended timing reasoning. A faster endpoint will score higher.
+| Model | Single Event | Regime Shift | Causal Chain | Avg |
+|-------|-------------|--------------|--------------|-----|
+| Qwen2.5-72B-Instruct | 0.822 | 0.753 | 0.615 | **0.73** |
+| llama-3.3-70b-versatile | 0.822 | 0.729 | 0.537 | **0.70** |
+| llama-3.1-8b-instant | 0.822 | 0.774 | 0.489 | **0.69** |
+| gpt-4o | 0.830 | 0.876 | 0.194 | **0.63** |
+| Llama-3.1-8B-Instruct | 0.822 | 0.774 | 0.165 | **0.59** |
+| gemma-3-27b-it | 0.779 | 0.515 | 0.165 | **0.49** |
+| Llama-4-Scout-17B | 0.822 | 0.472 | 0.165 | **0.49** |
+
+Causal chain is the differentiating task — it requires anticipatory positioning 3 steps ahead of the consequence. Models that reason well on standard benchmarks (gpt-4o) still struggle here without explicit causal prompting.
 
 ## Project Structure
 

@@ -4,27 +4,29 @@ test.py — LLM Benchmark Runner for Macro Signal Engine
 Runs inference across one or more model configurations, records per-task scores,
 and writes assets/llm_comparison.png (horizontal bar chart, sorted by avg score).
 
-All models use the HuggingFace router (free tier) by default.
+Supported backends
+------------------
+  HF router  (default)   free, set HF_TOKEN
+  Groq                   free, very fast — set GROQ_API_KEY
 
 Usage
 -----
-# Run the default free HF model list, then plot
-HF_TOKEN=hf_xxx python test.py
+# HF router
+$env:HF_TOKEN="hf_xxx"; python test.py
 
-# Run specific models
-python test.py --models Qwen/Qwen2.5-72B-Instruct,meta-llama/Llama-3.3-70B-Instruct
+# Groq — runs GROQ_MODELS list automatically
+$env:GROQ_API_KEY="gsk_xxx"; python test.py --groq
 
-# Skip running; just regenerate the chart from saved results
+# Groq with specific models
+$env:GROQ_API_KEY="gsk_xxx"; python test.py --groq --models "llama-3.3-70b-versatile,gemma2-9b-it"
+
+# Both in one go
+$env:HF_TOKEN="hf_xxx"; $env:GROQ_API_KEY="gsk_xxx"; python test.py --groq
+
+# Plot only (no inference)
 python test.py --plot-only
 
-Environment variables
----------------------------------------------
-  HF_TOKEN      HuggingFace API token (required for running models)
-  API_BASE_URL  LLM endpoint (default: https://router.huggingface.co/v1)
-  ENV_URL       Space URL    (default: https://krishvenky-macro-signal-env.hf.space)
-
-Results are accumulated in assets/results.json so you can run models
-incrementally without losing earlier data.
+Results accumulate in assets/results.json across runs.
 """
 
 from __future__ import annotations
@@ -56,27 +58,31 @@ ASSETS_DIR.mkdir(exist_ok=True)
 TASKS = ["single_event", "regime_shift", "causal_chain"]
 
 # ---------------------------------------------------------------------------
-# Free HF router models to benchmark by default
+# Model lists
 # ---------------------------------------------------------------------------
+# HF router — models confirmed available on free tier
 DEFAULT_MODELS = [
-    # --- Large frontier (same tier as that guy's benchmark) ---
     "Qwen/Qwen2.5-72B-Instruct",
-    "Qwen/Qwen3-32B",
-    "meta-llama/Llama-3.3-70B-Instruct",
     "meta-llama/Llama-4-Scout-17B-16E-Instruct",
-    "moonshotai/Kimi-K2-Instruct",
-    "deepseek-ai/DeepSeek-V3-0324",
-    "mistralai/Mistral-Small-3.1-24B-Instruct-2503",
-    "google/gemma-3-27b-it",
-    # --- Smaller / faster ---
     "meta-llama/Llama-3.1-8B-Instruct",
-    "microsoft/Phi-4-multimodal-instruct",
-    "mistralai/Mistral-7B-Instruct-v0.3",
-    # --- Finance-specialized ---
-    "AdaptLLM/finance-chat",                    # LLaMA fine-tuned on finance corpus
-    "TheFinAI/finma-7b-nlp",                    # FinMA — FLARE benchmark finance LLM
-    "INTERNLM/internlm2_5-7b-finance",          # InternLM finance variant
+    "google/gemma-3-27b-it",
 ]
+
+# Groq — free tier, very fast, different model name format
+GROQ_MODELS = [
+    "llama-3.3-70b-versatile",       # Meta Llama 3.3 70B
+    "llama-3.1-8b-instant",          # Meta Llama 3.1 8B (fast)
+    "llama-4-scout-17b-16e-instruct", # Meta Llama 4 Scout
+    "llama-4-maverick-17b-128e-instruct", # Meta Llama 4 Maverick
+    "deepseek-r1-distill-llama-70b", # DeepSeek R1 distilled
+    "gemma2-9b-it",                  # Google Gemma 2 9B
+    "mixtral-8x7b-32768",            # Mistral MoE
+    "qwen-qwq-32b",                  # Qwen QwQ 32B reasoning
+    "compound-beta",                 # Groq compound model
+    "compound-beta-mini",            # Groq compound mini
+]
+
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
 # ---------------------------------------------------------------------------
 # Score helpers
@@ -122,12 +128,12 @@ def parse_scores_from_output(stdout: str) -> Dict[str, float]:
 # Running inference
 # ---------------------------------------------------------------------------
 
-def run_model(model_name: str, env_url: str, hf_token: str, api_base: str) -> Dict[str, float]:
-    """Run inference.py for a single model; return {task: score}."""
+def run_model(model_name: str, env_url: str, api_key: str, api_base: str) -> Dict[str, float]:
+    """Run inference.py once — stream to terminal AND capture for parsing."""
     env = {
         **os.environ,
         "MODEL_NAME": model_name,
-        "HF_TOKEN": hf_token,
+        "HF_TOKEN": api_key,      # inference.py reads this as the bearer token
         "API_BASE_URL": api_base,
         "ENV_URL": env_url,
     }
@@ -135,15 +141,17 @@ def run_model(model_name: str, env_url: str, hf_token: str, api_base: str) -> Di
     print(f"Running model: {model_name}")
     print(f"{'='*60}")
 
-    # Stream output to terminal
-    subprocess.run([sys.executable, str(INFERENCE_SCRIPT)], env=env, capture_output=False, text=True)
-
-    # Re-run silently to capture and parse scores
-    proc2 = subprocess.run(
+    captured_lines: List[str] = []
+    proc = subprocess.Popen(
         [sys.executable, str(INFERENCE_SCRIPT)],
-        env=env, capture_output=True, text=True,
+        env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
     )
-    scores = parse_scores_from_output(proc2.stdout + proc2.stderr)
+    for line in proc.stdout:  # type: ignore[union-attr]
+        print(line, end="", flush=True)
+        captured_lines.append(line)
+    proc.wait()
+
+    scores = parse_scores_from_output("".join(captured_lines))
 
     for task in TASKS:
         if task not in scores:
@@ -191,14 +199,15 @@ def generate_chart(results: Dict[str, Dict[str, float]]) -> None:
     # Categorise models for colour coding
     FINANCE_MODELS = {"AdaptLLM/finance-chat", "TheFinAI/finma-7b-nlp", "INTERNLM/internlm2_5-7b-finance"}
     SMALL_MODELS   = {"meta-llama/Llama-3.1-8B-Instruct", "mistralai/Mistral-7B-Instruct-v0.3",
-                      "microsoft/Phi-4-multimodal-instruct"}
-    REFERENCE      = {"gpt-4o (measured)"}
+                      "microsoft/Phi-4-multimodal-instruct", "llama-3.1-8b-instant",
+                      "gemma2-9b-it"}
+    REFERENCE      = {"gpt-4o"}
 
     def model_color(name: str) -> str:
         if name in FINANCE_MODELS:   return "#f0a500"   # gold  — finance-tuned
         if name in REFERENCE:        return "#888888"   # grey  — proprietary reference
-        if name in SMALL_MODELS:     return "#5f9ea0"   # muted blue — small/fast
-        return "#4C9BE8"                                # bright blue — large open
+        if name in SMALL_MODELS:     return "#5f9ea0"   # teal  — small/fast
+        return "#4C9BE8"                                # blue  — large open-source
 
     # Sort by avg score ascending so best is at top of horizontal chart
     sorted_models = sorted(results.items(), key=lambda kv: avg_score(kv[1]))
@@ -239,17 +248,6 @@ def generate_chart(results: Dict[str, Dict[str, float]]) -> None:
     ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%.1f"))
     ax.grid(axis="x", color="#2a2a2a", linewidth=0.6, linestyle="--")
 
-    # Legend: categories
-    legend_patches = [
-        mpatches.Patch(color="#4C9BE8", label="Large open-source"),
-        mpatches.Patch(color="#5f9ea0", label="Small / fast"),
-        mpatches.Patch(color="#f0a500", label="Finance-specialized"),
-        mpatches.Patch(color="#888888", label="Proprietary reference"),
-        plt.Line2D([0], [0], color="#ffd700", linestyle="--", linewidth=1.2, label="0.5 baseline"),
-    ]
-    ax.legend(handles=legend_patches, loc="lower right", framealpha=0.25,
-              facecolor="#111", edgecolor="#444", labelcolor="#cccccc", fontsize=8)
-
     # ---- RIGHT: per-task score heat-style bar chart ----
     ax2 = axes[1]
     ax2.set_facecolor("#1a1a1a")
@@ -276,15 +274,43 @@ def generate_chart(results: Dict[str, Dict[str, float]]) -> None:
     ax2.set_title("Per-Task Breakdown", fontsize=11, color="#00d4ff", pad=8, fontweight="bold")
     ax2.set_xlim(0, 1.05)
     ax2.grid(axis="x", color="#2a2a2a", linewidth=0.6, linestyle="--")
-    ax2.legend(loc="lower right", framealpha=0.25, facecolor="#111",
-               edgecolor="#444", labelcolor="#cccccc", fontsize=8)
 
     fig.suptitle(
         "Macro Signal Engine — LLM Benchmark",
         fontsize=14, color="#00d4ff", fontweight="bold", y=1.01,
     )
 
+    # --- Legends anchored below each panel (only show categories present in data) ---
+    category_defs = [
+        ("#4C9BE8", "Large open-source"),
+        ("#5f9ea0", "Small / fast"),
+        ("#f0a500", "Finance-specialized"),
+        ("#888888", "Proprietary reference"),
+    ]
+    used_colors = set(colors)
+    category_patches = [
+        mpatches.Patch(color=c, label=lbl)
+        for c, lbl in category_defs if c in used_colors
+    ]
+    category_patches.append(
+        plt.Line2D([0], [0], color="#ffd700", linestyle="--", linewidth=1.2, label="0.5 baseline")
+    )
+    task_patches = [
+        mpatches.Patch(color="#4CAF50", label="Single Event (Easy)"),
+        mpatches.Patch(color="#2196F3", label="Regime Shift (Med)"),
+        mpatches.Patch(color="#F44336", label="Causal Chain (Hard)"),
+    ]
+    axes[0].legend(handles=category_patches, loc="upper center",
+                   bbox_to_anchor=(0.5, -0.12), ncol=3,
+                   framealpha=0.25, facecolor="#111", edgecolor="#444",
+                   labelcolor="#cccccc", fontsize=8)
+    axes[1].legend(handles=task_patches, loc="upper center",
+                   bbox_to_anchor=(0.5, -0.12), ncol=3,
+                   framealpha=0.25, facecolor="#111", edgecolor="#444",
+                   labelcolor="#cccccc", fontsize=8)
+
     plt.tight_layout()
+    plt.subplots_adjust(wspace=0.35, bottom=0.18)
     plt.savefig(CHART_FILE, dpi=150, bbox_inches="tight", facecolor="#1a1a1a")
     plt.close()
     print(f"Chart saved -> {CHART_FILE}")
@@ -298,7 +324,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Benchmark LLMs on Macro Signal Engine")
     parser.add_argument(
         "--models", default="",
-        help="Comma-separated model names to run. Leave empty to use DEFAULT_MODELS list.",
+        help="Comma-separated model names to run.",
+    )
+    parser.add_argument(
+        "--groq", action="store_true",
+        help="Use Groq backend (GROQ_API_KEY) instead of HF router.",
     )
     parser.add_argument(
         "--plot-only", action="store_true",
@@ -309,15 +339,32 @@ def main() -> None:
     results = load_results()
 
     if not args.plot_only:
+        env_url = os.getenv("ENV_URL", "https://krishvenky-macro-signal-env.hf.space")
+        models_to_run = [m.strip() for m in args.models.split(",") if m.strip()]
+
+        if args.groq:
+            groq_key = os.getenv("GROQ_API_KEY", "")
+            if not groq_key:
+                print("GROQ_API_KEY not set — skipping Groq runs.")
+            else:
+                api_base = GROQ_BASE_URL
+                if not models_to_run:
+                    models_to_run = GROQ_MODELS
+                for model in models_to_run:
+                    scores = run_model(model, env_url, groq_key, api_base)
+                    results[model] = scores
+                    print(f"  {model}: avg={avg_score(scores):.3f}  {scores}")
+                save_results(results)
+                models_to_run = []  # don't fall through to HF block
+
         hf_token = os.getenv("HF_TOKEN", "")
-        if not hf_token:
-            print("HF_TOKEN not set — skipping inference runs, plotting existing data.")
-        else:
-            api_base = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
-            env_url = os.getenv("ENV_URL", "https://krishvenky-macro-signal-env.hf.space")
-            models_to_run = [m.strip() for m in args.models.split(",") if m.strip()]
-            if not models_to_run:
-                models_to_run = DEFAULT_MODELS
+        if models_to_run or (not args.groq and hf_token):
+            if not hf_token:
+                print("HF_TOKEN not set — skipping HF runs.")
+            else:
+                api_base = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+                if not models_to_run:
+                    models_to_run = DEFAULT_MODELS
 
             for model in models_to_run:
                 scores = run_model(model, env_url, hf_token, api_base)

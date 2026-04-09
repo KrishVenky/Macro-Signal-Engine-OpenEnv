@@ -57,5 +57,4 @@ audio.py
 *.safetensors
 *.gguf
 
-# Chart output — generated locally, not needed by the Space
-assets/*.png
+# assets/*.png tracked in git for README display
